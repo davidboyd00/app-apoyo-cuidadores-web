@@ -1,0 +1,24 @@
+:root {
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.45;
+  color-scheme: light dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #111;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #16171d;
+    color: #f3f4f6;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
