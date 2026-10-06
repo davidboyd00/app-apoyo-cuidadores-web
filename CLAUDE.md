@@ -34,6 +34,27 @@ final 24/11/2026.
 6. **Contrato con el backend congela en `app/schemas.py`**. Cambios a los
    tipos se coordinan con David.
 
+## Contrato con el backend (tipos auto-generados)
+
+El backend genera `openapi.json` desde su FastAPI app
+(`scripts/generate_openapi.py`) y lo commitea al repo. Acá consumimos
+ese archivo con `openapi-typescript` para producir `src/lib/api-types.ts`:
+
+```bash
+npm run types:api         # desde el main de GitHub (reproducible)
+npm run types:api:local   # desde ../caregivers-backend/openapi.json (dev local)
+```
+
+Importar los tipos vía `src/lib/api.ts`:
+
+```ts
+import type { Schemas } from "@/lib/api";
+type Patient = Schemas["Patient"];
+```
+
+Nunca edites `api-types.ts` a mano. Si falta un tipo, el fix es en el
+backend (`app/schemas.py` + regenerar openapi.json + commit).
+
 ## Antes de declarar una tarea terminada
 
 ```bash

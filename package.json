@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "types:api": "openapi-typescript https://raw.githubusercontent.com/davidboyd00/app-apoyo-cuidadores/main/openapi.json -o src/lib/api-types.ts",
+    "types:api:local": "openapi-typescript ../caregivers-backend/openapi.json -o src/lib/api-types.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
@@ -21,6 +23,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
+    "openapi-typescript": "^7.13.0",
     "oxlint": "^1.81.0",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"

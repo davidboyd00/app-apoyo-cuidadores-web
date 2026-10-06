@@ -1,4 +1,12 @@
+import type { components } from "./api-types";
 import { supabase } from "./supabase";
+
+// Tipos del contrato con el backend. Se regeneran con `npm run types:api`
+// (o `:local` si tenés el backend como sibling en disco). Fuente de verdad:
+// `openapi.json` del repo del backend, publicado por FastAPI.
+export type { components, paths } from "./api-types";
+
+export type Schemas = components["schemas"];
 
 const BASE = import.meta.env.VITE_API_URL;
 
