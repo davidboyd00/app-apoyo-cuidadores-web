@@ -102,15 +102,35 @@
   display: block;
 }
 
-.formFooter {
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.fechaManual {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px;
+  gap: 8px 12px;
 }
 
-.formFooter > :first-child {
-  flex: 1 1 220px;
+.fechaManual > :first-child {
+  flex: 1 1 240px;
+}
+
+/* Botón con aspecto de link dentro de texto; área táctil de 44 px. */
+.linkButton {
+  min-height: var(--control-h);
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 /* --- Timeline -------------------------------------------------------------- */

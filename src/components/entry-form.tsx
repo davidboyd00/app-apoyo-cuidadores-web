@@ -21,13 +21,18 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
   const crear = useCreateEntry(patientId);
   const editando = initialValues !== undefined;
   const grupoKind = useId();
-  const fechaInicial = initialValues
-    ? isoLocal(new Date(initialValues.occurred_at))
-    : isoLocal(new Date());
+  // Fecha original de la entrada en formato datetime-local (solo al editar).
+  const [fechaInicial] = useState(() =>
+    initialValues ? isoLocal(new Date(initialValues.occurred_at)) : ""
+  );
 
   const [kind, setKind] = useState<Kind>(initialValues?.kind ?? "nota");
   const [content, setContent] = useState(initialValues?.content ?? "");
   const [occurredAt, setOccurredAt] = useState(fechaInicial);
+  // Al crear, la fecha es "ahora" por defecto y se toma al enviar (no al
+  // abrir la página): si el form queda abierto una hora, no se registra
+  // con la hora vieja. Al editar, el campo de fecha siempre está visible.
+  const [fechaManual, setFechaManual] = useState(editando);
   const [guardando, setGuardando] = useState(false);
   const [errorContenido, setErrorContenido] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,12 +47,7 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
     const valores: EntryValues = {
       kind,
       content: content.trim(),
-      // datetime-local pierde los segundos: si no se tocó la fecha,
-      // conservamos el valor original para no "editarla" sin querer.
-      occurred_at:
-        initialValues && occurredAt === fechaInicial
-          ? initialValues.occurred_at
-          : new Date(occurredAt).toISOString(),
+      occurred_at: fechaParaEnviar(),
     };
     setGuardando(true);
     setError(null);
@@ -57,13 +57,21 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
       } else {
         await crear.mutateAsync({ ...valores, source: "text" });
         setContent("");
-        setOccurredAt(isoLocal(new Date()));
+        setFechaManual(false);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
       setGuardando(false);
     }
+  }
+
+  function fechaParaEnviar(): string {
+    if (!fechaManual) return new Date().toISOString();
+    // datetime-local pierde los segundos: si no se tocó la fecha,
+    // conservamos el valor original para no "editarla" sin querer.
+    if (initialValues && occurredAt === fechaInicial) return initialValues.occurred_at;
+    return new Date(occurredAt).toISOString();
   }
 
   return (
@@ -104,28 +112,52 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
         )}
       </FormField>
 
-      <div className={s.formFooter}>
-        <FormField label="Fecha y hora">
-          {(props) => (
-            <input
-              {...props}
-              type="datetime-local"
-              value={occurredAt}
-              onChange={(e) => setOccurredAt(e.target.value)}
-              className="input"
-            />
-          )}
-        </FormField>
-        <div className="row">
-          {onCancel && (
-            <button type="button" onClick={onCancel} className="btn btn-ghost">
-              Cancelar
+      {fechaManual && (
+        <div className={s.fechaManual}>
+          <FormField label="Fecha y hora">
+            {(props) => (
+              <input
+                {...props}
+                type="datetime-local"
+                value={occurredAt}
+                onChange={(e) => setOccurredAt(e.target.value)}
+                className="input"
+              />
+            )}
+          </FormField>
+          {!editando && (
+            <button type="button" onClick={() => setFechaManual(false)} className="btn btn-ghost">
+              Usar la hora actual
             </button>
           )}
-          <button type="submit" disabled={guardando} className="btn btn-primary">
-            {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Registrar"}
-          </button>
         </div>
+      )}
+
+      {/* Botón justo bajo el texto: en móvil queda visible con el teclado abierto. */}
+      <div className={s.formActions}>
+        <button type="submit" disabled={guardando} className="btn btn-primary">
+          {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Registrar"}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn btn-ghost">
+            Cancelar
+          </button>
+        )}
+        {!fechaManual && (
+          <span className="muted small">
+            Fecha: ahora ·{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setOccurredAt(isoLocal(new Date()));
+                setFechaManual(true);
+              }}
+              className={s.linkButton}
+            >
+              Cambiar fecha
+            </button>
+          </span>
+        )}
       </div>
 
       {error && (
