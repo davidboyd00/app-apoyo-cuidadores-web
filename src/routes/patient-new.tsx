@@ -6,6 +6,7 @@ import { FormField } from "../components/form-field";
 import { useCreatePatient } from "../hooks/use-api";
 import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import s from "../styles/patients.module.css";
+import { mensajeError } from "../utils/errores";
 
 export default function PatientNewPage() {
   useTituloPagina("Agregar persona");
@@ -91,7 +92,7 @@ export default function PatientNewPage() {
 
         {crear.isError && (
           <p className="alert" role="alert">
-            {crear.error instanceof Error ? crear.error.message : "Error"}
+            {mensajeError(crear.error)}
           </p>
         )}
 

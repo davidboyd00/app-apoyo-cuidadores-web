@@ -8,6 +8,7 @@ import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
 import s from "../styles/patients.module.css";
 import { edad, fechaCompleta, tiempoRelativo } from "../utils/bitacora";
+import { mensajeError } from "../utils/errores";
 
 export default function PatientsPage() {
   useTituloPagina("Personas que cuidas");
@@ -39,7 +40,7 @@ export default function PatientsPage() {
 
       {error && (
         <p className="alert" role="alert">
-          {error instanceof Error ? error.message : "Error"}
+          {mensajeError(error)}
         </p>
       )}
 

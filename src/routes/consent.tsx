@@ -6,6 +6,7 @@ import { useAcceptConsent, useConsent } from "../hooks/use-api";
 import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/auth.module.css";
+import { mensajeError } from "../utils/errores";
 
 export default function ConsentPage() {
   useTituloPagina("Política de privacidad");
@@ -26,7 +27,7 @@ export default function ConsentPage() {
     return (
       <AuthLayout title="No pudimos cargar la política" wide>
         <p className="alert" role="alert">
-          {error instanceof Error ? error.message : "Error desconocido"}
+          {mensajeError(error)}
         </p>
       </AuthLayout>
     );
@@ -81,7 +82,7 @@ export default function ConsentPage() {
 
           {aceptar.isError && (
             <p className="alert" role="alert">
-              {aceptar.error instanceof Error ? aceptar.error.message : "Error"}
+              {mensajeError(aceptar.error)}
             </p>
           )}
 

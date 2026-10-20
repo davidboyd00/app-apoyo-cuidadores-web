@@ -5,6 +5,7 @@ import type { Schemas } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/members.module.css";
 import { validarEmail } from "../utils/auth-errores";
+import { mensajeError } from "../utils/errores";
 import { Avatar } from "./avatar";
 import { FormField } from "./form-field";
 
@@ -46,7 +47,7 @@ export function MembersPanel({ patientId }: { patientId: string }) {
       setRol("caregiver");
     } catch (error) {
       // 404 sin cuenta / 403 no admin: el detail del backend va bajo el correo.
-      setErrorEmail(error instanceof Error ? error.message : "No se pudo invitar.");
+      setErrorEmail(mensajeError(error, "No se pudo invitar."));
     }
   }
 
@@ -57,7 +58,7 @@ export function MembersPanel({ patientId }: { patientId: string }) {
     try {
       await quitar.mutateAsync(m.user_id);
     } catch (err) {
-      setErrorQuitar(err instanceof Error ? err.message : "No se pudo quitar al miembro.");
+      setErrorQuitar(mensajeError(err, "No se pudo quitar al miembro."));
     }
   }
 
@@ -74,7 +75,7 @@ export function MembersPanel({ patientId }: { patientId: string }) {
         )}
         {miembros.error && (
           <p className={`alert ${s.member}`} role="alert">
-            {miembros.error instanceof Error ? miembros.error.message : "Error"}
+            {mensajeError(miembros.error)}
           </p>
         )}
         {miembros.data && miembros.data.length === 0 && (

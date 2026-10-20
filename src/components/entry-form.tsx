@@ -4,6 +4,7 @@ import { useCreateEntry } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
 import s from "../styles/patient-detail.module.css";
 import { KINDS, type Kind } from "../utils/bitacora";
+import { mensajeError } from "../utils/errores";
 import { FormField } from "./form-field";
 
 export type EntryValues = Pick<Schemas["Entry"], "kind" | "content" | "occurred_at">;
@@ -60,7 +61,7 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
         setFechaManual(false);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error");
+      setError(mensajeError(err));
     } finally {
       setGuardando(false);
     }

@@ -7,6 +7,7 @@ import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/members.module.css";
+import { mensajeError } from "../utils/errores";
 
 export default function ProfilePage() {
   useTituloPagina("Mi perfil");
@@ -24,7 +25,7 @@ export default function ProfilePage() {
       )}
       {perfil.error && (
         <p className="alert" role="alert">
-          {perfil.error instanceof Error ? perfil.error.message : "Error"}
+          {mensajeError(perfil.error)}
         </p>
       )}
       {perfil.data && <ProfileForm key={perfil.data.id} perfil={perfil.data} />}
@@ -89,7 +90,7 @@ function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
 
       {guardar.isError && (
         <p className="alert" role="alert">
-          {guardar.error instanceof Error ? guardar.error.message : "Error"}
+          {mensajeError(guardar.error)}
         </p>
       )}
 

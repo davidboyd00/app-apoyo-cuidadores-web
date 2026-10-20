@@ -29,6 +29,7 @@ import {
   tiempoRelativo,
   type Kind,
 } from "../utils/bitacora";
+import { mensajeError } from "../utils/errores";
 
 // supabase-js reutiliza un canal con el mismo nombre y removeChannel es
 // async: con StrictMode (montar → desmontar → montar) el segundo `.on()`
@@ -124,7 +125,7 @@ export default function PatientDetailPage() {
     try {
       await borrar.mutateAsync(entryId);
     } catch (err) {
-      const mensaje = err instanceof Error ? err.message : "No se pudo borrar la entrada.";
+      const mensaje = mensajeError(err, "No se pudo borrar la entrada.");
       setErrorPorEntrada((prev) => ({ ...prev, [entryId]: mensaje }));
     }
   }
@@ -144,7 +145,7 @@ export default function PatientDetailPage() {
     return (
       <AppShell>
         <p className="alert" role="alert">
-          {paciente.error instanceof Error ? paciente.error.message : "Error"}
+          {mensajeError(paciente.error)}
         </p>
         <Link to="/">← Volver</Link>
       </AppShell>
@@ -211,7 +212,7 @@ export default function PatientDetailPage() {
         )}
         {entradas.error && (
           <p className="alert" role="alert">
-            {entradas.error instanceof Error ? entradas.error.message : "Error"}
+            {mensajeError(entradas.error)}
           </p>
         )}
         {entradas.data && entradas.data.length === 0 && (
