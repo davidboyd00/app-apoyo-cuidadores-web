@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import { useCreateEntry } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
@@ -37,6 +37,13 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
   const [guardando, setGuardando] = useState(false);
   const [errorContenido, setErrorContenido] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [registrado, setRegistrado] = useState(false);
+  const textoRef = useRef<HTMLTextAreaElement>(null);
+
+  // Al entrar a editar, el foco va al texto (el botón "Editar" desaparece).
+  useEffect(() => {
+    if (editando) textoRef.current?.focus();
+  }, [editando]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -59,6 +66,7 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
         await crear.mutateAsync({ ...valores, source: "text" });
         setContent("");
         setFechaManual(false);
+        setRegistrado(true);
       }
     } catch (err) {
       setError(mensajeError(err));
@@ -105,9 +113,13 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
         {(props) => (
           <textarea
             {...props}
+            ref={textoRef}
             placeholder="Ej: Durmió bien, almorzó completo y salimos a caminar 15 min."
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setRegistrado(false);
+            }}
             className="input"
           />
         )}
@@ -144,6 +156,10 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
             Cancelar
           </button>
         )}
+        {/* Región aria-live siempre presente; solo cambia su contenido. */}
+        <span aria-live="polite" className={registrado ? "badge badge-success" : undefined}>
+          {registrado && "Registrado ✓"}
+        </span>
         {!fechaManual && (
           <span className="muted small">
             Fecha: ahora ·{" "}

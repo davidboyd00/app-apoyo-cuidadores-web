@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "../components/app-shell";
@@ -53,6 +53,25 @@ export default function PatientDetailPage() {
   useTituloPagina(paciente.data?.nombre);
 
   const [enVivoCaido, setEnVivoCaido] = useState(false);
+  // Manejo de foco: al salir de edición vuelve al botón "Editar" de esa
+  // entrada; al borrar, al título "Registros" (el elemento ya no existe).
+  const botonesEditar = useRef(new Map<string, HTMLButtonElement>());
+  const tituloRegistros = useRef<HTMLHeadingElement>(null);
+  const focoTrasEditar = useRef<string | null>(null);
+  const [anuncio, setAnuncio] = useState("");
+
+  // Cuando el botón "Editar" vuelve a existir (fin de la edición), le
+  // devolvemos el foco.
+  useEffect(() => {
+    if (editandoId || !focoTrasEditar.current) return;
+    botonesEditar.current.get(focoTrasEditar.current)?.focus();
+    focoTrasEditar.current = null;
+  }, [editandoId]);
+
+  function salirDeEdicion(entryId: string) {
+    focoTrasEditar.current = entryId;
+    setEditandoId(null);
+  }
 
   // Realtime: cuando otro familiar registra o edita una entrada, refrescamos
   // el feed. RLS (entries_select) también filtra los eventos que llegan.
@@ -114,8 +133,9 @@ export default function PatientDetailPage() {
     if (valores.occurred_at !== entrada.occurred_at) cambios.occurred_at = valores.occurred_at;
     if (Object.keys(cambios).length > 0) {
       await actualizar.mutateAsync({ entryId: entrada.id, cambios });
+      setAnuncio("Cambios guardados.");
     }
-    setEditandoId(null);
+    salirDeEdicion(entrada.id);
   }
 
   async function borrarEntrada(entryId: string) {
@@ -129,6 +149,8 @@ export default function PatientDetailPage() {
     });
     try {
       await borrar.mutateAsync(entryId);
+      setAnuncio("Entrada borrada.");
+      tituloRegistros.current?.focus();
     } catch (err) {
       const mensaje = mensajeError(err, "No se pudo borrar la entrada.");
       setErrorPorEntrada((prev) => ({ ...prev, [entryId]: mensaje }));
@@ -185,6 +207,9 @@ export default function PatientDetailPage() {
 
       <section id="bitacora" className={`stack ${s.section}`} aria-labelledby="titulo-bitacora">
         <h2 id="titulo-bitacora">Bitácora</h2>
+        <p className="visually-hidden" aria-live="polite">
+          {anuncio}
+        </p>
         <p className={`muted small ${s.avisoEnVivo}`} aria-live="polite">
           {enVivoCaido &&
             "Las actualizaciones en vivo no están disponibles ahora; la bitácora se refresca al volver a esta pestaña."}
@@ -192,7 +217,9 @@ export default function PatientDetailPage() {
         {id && <EntryForm patientId={id} />}
 
         <div className="row-between">
-          <h3>Registros</h3>
+          <h3 ref={tituloRegistros} tabIndex={-1}>
+            Registros
+          </h3>
           <label className="row small">
             <span className="field-label">Mostrar</span>
             <select
@@ -251,7 +278,7 @@ export default function PatientDetailPage() {
                         patientId={id}
                         initialValues={e}
                         onSubmit={(valores) => guardarEdicion(e, valores)}
-                        onCancel={() => setEditandoId(null)}
+                        onCancel={() => salirDeEdicion(e.id)}
                       />
                     </div>
                   ) : (
@@ -278,6 +305,10 @@ export default function PatientDetailPage() {
                       {esMia && (
                         <div className={s.entryActions}>
                           <button
+                            ref={(el) => {
+                              if (el) botonesEditar.current.set(e.id, el);
+                              else botonesEditar.current.delete(e.id);
+                            }}
                             onClick={() => setEditandoId(e.id)}
                             className="btn btn-ghost"
                             aria-label={`Editar entrada de ${tiempoRelativo(e.occurred_at)}`}
