@@ -100,6 +100,39 @@ export function useCreateEntry(patientId: string | undefined) {
   });
 }
 
+// Editar/borrar: RLS decide si se puede (autor o admin). Si bloquea, el
+// backend responde 404 con un `detail` en español que mostramos tal cual.
+export function useUpdateEntry(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      entryId,
+      cambios,
+    }: {
+      entryId: string;
+      cambios: Schemas["EntryUpdate"];
+    }) =>
+      api.patch<Schemas["Entry"]>(
+        `/patients/${patientId}/entries/${entryId}`,
+        cambios
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
+    },
+  });
+}
+
+export function useDeleteEntry(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (entryId: string) =>
+      api.delete<void>(`/patients/${patientId}/entries/${entryId}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
+    },
+  });
+}
+
 // --- Red de cuidado ---------------------------------------------------------
 
 export function useMembers(patientId: string | undefined) {

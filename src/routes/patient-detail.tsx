@@ -1,9 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { EntryForm } from "../components/entry-form";
-import { useMembers, usePatient, usePatientEntries } from "../hooks/use-api";
+import { EntryForm, type EntryValues } from "../components/entry-form";
+import {
+  useDeleteEntry,
+  useMembers,
+  usePatient,
+  usePatientEntries,
+  useUpdateEntry,
+} from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
+import { useAuth } from "../providers/auth-provider";
 
 type Kind = Schemas["EntryCreate"]["kind"];
 
@@ -25,6 +32,11 @@ export default function PatientDetailPage() {
     kind: filtroKind || undefined,
   });
   const miembros = useMembers(id);
+  const { session } = useAuth();
+  const actualizar = useUpdateEntry(id);
+  const borrar = useDeleteEntry(id);
+  const [editandoId, setEditandoId] = useState<string | null>(null);
+  const [errorPorEntrada, setErrorPorEntrada] = useState<Record<string, string>>({});
 
   // Mapa author_id → nombre|email para rotular la autoría de cada entrada.
   // Base del KPI de relevo familiar: hace visible quién escribió qué.
@@ -35,6 +47,35 @@ export default function PatientDetailPage() {
     }
     return map;
   }, [miembros.data]);
+
+  // Solo se envían los campos que cambiaron; si no cambió nada, se cierra.
+  async function guardarEdicion(entrada: Schemas["Entry"], valores: EntryValues) {
+    const cambios: Schemas["EntryUpdate"] = {};
+    if (valores.kind !== entrada.kind) cambios.kind = valores.kind;
+    if (valores.content !== entrada.content) cambios.content = valores.content;
+    if (valores.occurred_at !== entrada.occurred_at) cambios.occurred_at = valores.occurred_at;
+    if (Object.keys(cambios).length > 0) {
+      await actualizar.mutateAsync({ entryId: entrada.id, cambios });
+    }
+    setEditandoId(null);
+  }
+
+  async function borrarEntrada(entryId: string) {
+    if (!window.confirm("¿Borrar esta entrada de la bitácora? No se puede deshacer.")) {
+      return;
+    }
+    setErrorPorEntrada((prev) => {
+      const siguiente = { ...prev };
+      delete siguiente[entryId];
+      return siguiente;
+    });
+    try {
+      await borrar.mutateAsync(entryId);
+    } catch (err) {
+      const mensaje = err instanceof Error ? err.message : "No se pudo borrar la entrada.";
+      setErrorPorEntrada((prev) => ({ ...prev, [entryId]: mensaje }));
+    }
+  }
 
   if (paciente.isLoading) return <div style={{ padding: 24 }}>Cargando…</div>;
   if (paciente.error || !paciente.data) {
@@ -83,24 +124,62 @@ export default function PatientDetailPage() {
         </div>
 
         {entradas.isLoading && <p>Cargando bitácora…</p>}
+        {entradas.error && (
+          <p style={styles.error}>
+            {entradas.error instanceof Error ? entradas.error.message : "Error"}
+          </p>
+        )}
         {entradas.data && entradas.data.length === 0 && (
           <p style={styles.muted}>Sin entradas todavía.</p>
         )}
         <ul style={styles.list}>
-          {entradas.data?.map((e) => (
-            <li key={e.id} style={styles.entry}>
-              <div style={styles.entryHeader}>
-                <span style={styles.kindBadge}>{KIND_LABELS[e.kind]}</span>
-                <span style={styles.muted}>
-                  {new Date(e.occurred_at).toLocaleString("es-CL")}
-                </span>
-                <span style={styles.author}>
-                  {autorPorId[e.author_id] ?? "autor desconocido"}
-                </span>
-              </div>
-              <p style={styles.entryContent}>{e.content}</p>
-            </li>
-          ))}
+          {entradas.data?.map((e) => {
+            // Mostrar botones solo al autor es UX; quien autoriza es RLS.
+            const esMia = e.author_id === session?.user.id;
+            if (editandoId === e.id && id) {
+              return (
+                <li key={e.id}>
+                  <EntryForm
+                    patientId={id}
+                    initialValues={e}
+                    onSubmit={(valores) => guardarEdicion(e, valores)}
+                    onCancel={() => setEditandoId(null)}
+                  />
+                </li>
+              );
+            }
+            return (
+              <li key={e.id} style={styles.entry}>
+                <div style={styles.entryHeader}>
+                  <span style={styles.kindBadge}>{KIND_LABELS[e.kind]}</span>
+                  <span style={styles.muted}>
+                    {new Date(e.occurred_at).toLocaleString("es-CL")}
+                  </span>
+                  <span style={styles.author}>
+                    {autorPorId[e.author_id] ?? "autor desconocido"}
+                  </span>
+                </div>
+                <p style={styles.entryContent}>{e.content}</p>
+                {esMia && (
+                  <div style={styles.entryActions}>
+                    <button onClick={() => setEditandoId(e.id)} style={styles.linkButton}>
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => borrarEntrada(e.id)}
+                      disabled={borrar.isPending && borrar.variables === e.id}
+                      style={{ ...styles.linkButton, color: "#c00" }}
+                    >
+                      {borrar.isPending && borrar.variables === e.id ? "Borrando…" : "Borrar"}
+                    </button>
+                  </div>
+                )}
+                {errorPorEntrada[e.id] && (
+                  <p style={styles.error}>{errorPorEntrada[e.id]}</p>
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </main>
@@ -155,4 +234,14 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 500,
   },
   entryContent: { margin: 0, whiteSpace: "pre-wrap" },
+  entryActions: { display: "flex", gap: 12, marginTop: 8, fontSize: 13 },
+  linkButton: {
+    padding: 0,
+    border: "none",
+    background: "none",
+    color: "#0A84FF",
+    cursor: "pointer",
+    fontSize: 13,
+  },
+  error: { color: "#c00", fontSize: 13, margin: "6px 0 0" },
 };

@@ -5,6 +5,8 @@ import type { Schemas } from "../lib/api";
 
 type Kind = Schemas["EntryCreate"]["kind"];
 
+export type EntryValues = Pick<Schemas["Entry"], "kind" | "content" | "occurred_at">;
+
 const KINDS: { value: Kind; label: string }[] = [
   { value: "nota", label: "Nota" },
   { value: "sintoma", label: "Síntoma" },
@@ -15,26 +17,59 @@ const KINDS: { value: Kind; label: string }[] = [
   { value: "otro", label: "Otro" },
 ];
 
-export function EntryForm({ patientId }: { patientId: string }) {
-  const crear = useCreateEntry(patientId);
-  const [kind, setKind] = useState<Kind>("nota");
-  const [content, setContent] = useState("");
-  const [occurredAt, setOccurredAt] = useState(() => isoLocalNow());
+type Props = {
+  patientId: string;
+  // Modo edición: si vienen `initialValues` + `onSubmit`, el form no crea
+  // una entrada nueva sino que entrega los valores al padre.
+  initialValues?: EntryValues;
+  onSubmit?: (valores: EntryValues) => Promise<unknown>;
+  onCancel?: () => void;
+};
 
-  async function onSubmit(e: FormEvent) {
+export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Props) {
+  const crear = useCreateEntry(patientId);
+  const editando = initialValues !== undefined;
+  const fechaInicial = initialValues
+    ? isoLocal(new Date(initialValues.occurred_at))
+    : isoLocal(new Date());
+
+  const [kind, setKind] = useState<Kind>(initialValues?.kind ?? "nota");
+  const [content, setContent] = useState(initialValues?.content ?? "");
+  const [occurredAt, setOccurredAt] = useState(fechaInicial);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await crear.mutateAsync({
+    const valores: EntryValues = {
       kind,
       content: content.trim(),
-      occurred_at: new Date(occurredAt).toISOString(),
-      source: "text",
-    });
-    setContent("");
-    setOccurredAt(isoLocalNow());
+      // datetime-local pierde los segundos: si no se tocó la fecha,
+      // conservamos el valor original para no "editarla" sin querer.
+      occurred_at:
+        initialValues && occurredAt === fechaInicial
+          ? initialValues.occurred_at
+          : new Date(occurredAt).toISOString(),
+    };
+    setGuardando(true);
+    setError(null);
+    try {
+      if (onSubmit) {
+        await onSubmit(valores);
+      } else {
+        await crear.mutateAsync({ ...valores, source: "text" });
+        setContent("");
+        setOccurredAt(isoLocal(new Date()));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error");
+    } finally {
+      setGuardando(false);
+    }
   }
 
   return (
-    <form onSubmit={onSubmit} style={styles.form}>
+    <form onSubmit={handleSubmit} style={styles.form}>
       <div style={styles.row}>
         <select
           value={kind}
@@ -61,25 +96,27 @@ export function EntryForm({ patientId }: { patientId: string }) {
         onChange={(e) => setContent(e.target.value)}
         style={{ ...styles.input, minHeight: 80, resize: "vertical" }}
       />
-      {crear.isError && (
-        <div style={styles.error}>
-          {crear.error instanceof Error ? crear.error.message : "Error"}
-        </div>
-      )}
-      <button
-        type="submit"
-        disabled={crear.isPending || !content.trim()}
-        style={styles.primary}
-      >
-        {crear.isPending ? "Guardando…" : "Registrar"}
-      </button>
+      {error && <div style={styles.error}>{error}</div>}
+      <div style={styles.actions}>
+        <button
+          type="submit"
+          disabled={guardando || !content.trim()}
+          style={styles.primary}
+        >
+          {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Registrar"}
+        </button>
+        {onCancel && (
+          <button type="button" onClick={onCancel} style={styles.secondary}>
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   );
 }
 
-function isoLocalNow(): string {
+function isoLocal(d: Date): string {
   // datetime-local necesita 'YYYY-MM-DDTHH:MM' sin segundos ni timezone.
-  const d = new Date();
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
@@ -104,6 +141,7 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     minWidth: 160,
   },
+  actions: { display: "flex", gap: 8 },
   primary: {
     padding: "10px 14px",
     borderRadius: 6,
@@ -112,7 +150,13 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#fff",
     cursor: "pointer",
     fontWeight: 600,
-    alignSelf: "flex-start",
+  },
+  secondary: {
+    padding: "10px 14px",
+    borderRadius: 6,
+    border: "1px solid #ccc",
+    background: "#fff",
+    cursor: "pointer",
   },
   error: { color: "#c00", fontSize: 13 },
 };
