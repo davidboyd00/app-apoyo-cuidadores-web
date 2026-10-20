@@ -399,50 +399,97 @@ textarea.input {
   font-size: var(--fs-sm);
 }
 
-/* Chip de tipo de entrada: color por data-kind (ver --kind-*). */
+/* Chip de tipo de entrada: data-kind define --chip-bg/--chip-fg
+   (ver --kind-*); así otros componentes pueden usar el color del tipo. */
 .kind-chip {
   display: inline-flex;
   align-items: center;
   padding: 2px 10px;
   border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--chip-fg);
   font-size: var(--fs-sm);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.kind-chip[data-kind="nota"] {
-  background: var(--kind-nota-bg);
-  color: var(--kind-nota-fg);
+[data-kind="nota"] {
+  --chip-bg: var(--kind-nota-bg);
+  --chip-fg: var(--kind-nota-fg);
 }
 
-.kind-chip[data-kind="sintoma"] {
-  background: var(--kind-sintoma-bg);
-  color: var(--kind-sintoma-fg);
+[data-kind="sintoma"] {
+  --chip-bg: var(--kind-sintoma-bg);
+  --chip-fg: var(--kind-sintoma-fg);
 }
 
-.kind-chip[data-kind="animo"] {
-  background: var(--kind-animo-bg);
-  color: var(--kind-animo-fg);
+[data-kind="animo"] {
+  --chip-bg: var(--kind-animo-bg);
+  --chip-fg: var(--kind-animo-fg);
 }
 
-.kind-chip[data-kind="medicamento"] {
+[data-kind="medicamento"] {
+  --chip-bg: var(--kind-medicamento-bg);
+  --chip-fg: var(--kind-medicamento-fg);
+}
+
+[data-kind="alimentacion"] {
+  --chip-bg: var(--kind-alimentacion-bg);
+  --chip-fg: var(--kind-alimentacion-fg);
+}
+
+[data-kind="ejercicio"] {
+  --chip-bg: var(--kind-ejercicio-bg);
+  --chip-fg: var(--kind-ejercicio-fg);
+}
+
+[data-kind="otro"] {
+  --chip-bg: var(--kind-otro-bg);
+  --chip-fg: var(--kind-otro-fg);
+}
+
+.badge-success {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.badge-warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+
+/* Avatar de iniciales; el tono reutiliza la paleta de tipos (AA). */
+.avatar {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: var(--fs-sm);
+  font-weight: 600;
   background: var(--kind-medicamento-bg);
   color: var(--kind-medicamento-fg);
 }
 
-.kind-chip[data-kind="alimentacion"] {
-  background: var(--kind-alimentacion-bg);
-  color: var(--kind-alimentacion-fg);
+.avatar[data-tono="1"] {
+  background: var(--kind-animo-bg);
+  color: var(--kind-animo-fg);
 }
 
-.kind-chip[data-kind="ejercicio"] {
+.avatar[data-tono="2"] {
   background: var(--kind-ejercicio-bg);
   color: var(--kind-ejercicio-fg);
 }
 
-.kind-chip[data-kind="otro"] {
-  background: var(--kind-otro-bg);
-  color: var(--kind-otro-fg);
+.avatar[data-tono="3"] {
+  background: var(--kind-alimentacion-bg);
+  color: var(--kind-alimentacion-fg);
+}
+
+.avatar[data-tono="4"] {
+  background: var(--kind-sintoma-bg);
+  color: var(--kind-sintoma-fg);
 }
 
 .muted {

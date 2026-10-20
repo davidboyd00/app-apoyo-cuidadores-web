@@ -133,6 +133,18 @@ export function useDeleteEntry(patientId: string | undefined) {
   });
 }
 
+// KPI de relevo familiar (autores distintos en los últimos 7 días). La key
+// cuelga de "entries" a propósito: crear/editar/borrar entradas y el
+// realtime ya invalidan ese prefijo, así el badge se actualiza solo.
+export function useRelevo(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "entries", "metrics", "relevo"],
+    queryFn: () =>
+      api.get<Schemas["RelevoMetric"]>(`/patients/${patientId}/metrics/relevo`),
+  });
+}
+
 // --- Red de cuidado ---------------------------------------------------------
 
 export function useMembers(patientId: string | undefined) {

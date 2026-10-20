@@ -1,0 +1,199 @@
+/* --- Encabezado del paciente -------------------------------------------------- */
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.notas {
+  max-width: 60ch;
+  font-size: var(--fs-sm);
+  white-space: pre-wrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-h);
+  padding-inline: 12px;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tab:hover {
+  border-bottom-color: var(--primary);
+  color: var(--text);
+}
+
+/* Que el header fijo no tape el título al saltar a la sección. */
+.section {
+  scroll-margin-top: 120px;
+}
+
+/* --- Formulario de entrada ----------------------------------------------------- */
+
+.kinds {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+/* Cada chip es un <label> con un radio real (teclado y lector de pantalla). */
+.chipOption {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-h);
+  padding: 6px 14px;
+  border: 1px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chipOption:hover {
+  background: var(--surface-2);
+}
+
+.chipOption input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chipOption:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.chipOption:has(input:checked) {
+  border-color: var(--chip-fg);
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+}
+
+.check {
+  display: none;
+}
+
+.chipOption:has(input:checked) .check {
+  display: block;
+}
+
+.formFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.formFooter > :first-child {
+  flex: 1 1 220px;
+}
+
+/* --- Timeline -------------------------------------------------------------- */
+
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Línea vertical que une los avatares. */
+.timeline::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 19px;
+  width: 2px;
+  background: var(--border);
+}
+
+.entry {
+  position: relative;
+  display: flex;
+  gap: 12px;
+}
+
+.entryCard {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+}
+
+.entryHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.entryTime {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}
+
+.entryHead > :last-child {
+  margin-left: auto;
+}
+
+/* Acciones solo al pasar el mouse o con foco; en pantallas táctiles, siempre. */
+.entryActions {
+  display: flex;
+  gap: 4px;
+  margin-left: -10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.entryCard:hover .entryActions,
+.entryCard:focus-within .entryActions {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .entryActions {
+    opacity: 1;
+  }
+}
+
+.skeletonEntry {
+  height: 112px;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+}
+
+.entryEdit {
+  flex: 1;
+  min-width: 0;
+}

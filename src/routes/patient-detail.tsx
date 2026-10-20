@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { AppShell } from "../components/app-shell";
+import { Avatar } from "../components/avatar";
 import { EntryForm, type EntryValues } from "../components/entry-form";
+import { KindChip } from "../components/kind-chip";
 import { MembersPanel } from "../components/members-panel";
 import { SlowHint } from "../components/slow-hint";
 import {
@@ -11,23 +13,21 @@ import {
   useMembers,
   usePatient,
   usePatientEntries,
+  useRelevo,
   useUpdateEntry,
 } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/auth-provider";
-
-type Kind = Schemas["EntryCreate"]["kind"];
-
-const KIND_LABELS: Record<Kind, string> = {
-  nota: "Nota",
-  sintoma: "Síntoma",
-  animo: "Ánimo",
-  medicamento: "Medicamento",
-  alimentacion: "Alimentación",
-  ejercicio: "Ejercicio",
-  otro: "Otro",
-};
+import s from "../styles/patient-detail.module.css";
+import {
+  KINDS,
+  KIND_LABELS,
+  edad,
+  fechaCompleta,
+  tiempoRelativo,
+  type Kind,
+} from "../utils/bitacora";
 
 // supabase-js reutiliza un canal con el mismo nombre y removeChannel es
 // async: con StrictMode (montar → desmontar → montar) el segundo `.on()`
@@ -116,8 +116,11 @@ export default function PatientDetailPage() {
   if (paciente.isLoading) {
     return (
       <AppShell>
-        <p className="muted" aria-busy="true">Cargando…</p>
-        <SlowHint />
+        <div className="stack" aria-busy="true">
+          <SlowHint />
+          <div className={`skeleton ${s.skeletonEntry}`} />
+          <span className="visually-hidden">Cargando…</span>
+        </div>
       </AppShell>
     );
   }
@@ -127,52 +130,68 @@ export default function PatientDetailPage() {
         <p className="alert" role="alert">
           {paciente.error instanceof Error ? paciente.error.message : "Error"}
         </p>
+        <Link to="/">← Volver</Link>
       </AppShell>
     );
   }
 
+  const anios = edad(paciente.data.fecha_nacimiento);
+
   return (
     <AppShell>
       <nav>
-        <Link to="/">← Pacientes</Link>
+        <Link to="/">← Personas que cuidas</Link>
       </nav>
-      <header className="stack-sm">
-        <h1>{paciente.data.nombre}</h1>
-        {paciente.data.fecha_nacimiento && (
-          <p className="muted">
-            Nacido {new Date(paciente.data.fecha_nacimiento).toLocaleDateString("es-CL")}
-          </p>
-        )}
-        {paciente.data.notas && <p>{paciente.data.notas}</p>}
+
+      <header className={`card ${s.hero}`}>
+        <div className="stack-sm">
+          <h1>{paciente.data.nombre}</h1>
+          {anios !== null && <p className="muted">{anios} años</p>}
+          {paciente.data.notas && <p className={s.notas}>{paciente.data.notas}</p>}
+        </div>
+        {id && <RelevoBadge patientId={id} />}
       </header>
 
-      <section className="stack">
-        <h2>Registrar en la bitácora</h2>
-        {id && <EntryForm patientId={id} />}
-      </section>
+      <nav className={s.tabs} aria-label="Secciones del paciente">
+        <a href="#bitacora" className={s.tab}>
+          Bitácora
+        </a>
+        <a href="#red" className={s.tab}>
+          Red de cuidado
+        </a>
+      </nav>
 
-      <section className="stack">
+      <section id="bitacora" className={`stack ${s.section}`} aria-labelledby="titulo-bitacora">
+        <h2 id="titulo-bitacora">Bitácora</h2>
+        {id && <EntryForm patientId={id} />}
+
         <div className="row-between">
-          <h2>Bitácora</h2>
-          <select
-            value={filtroKind}
-            onChange={(e) => setFiltroKind(e.target.value as Kind | "")}
-            className="input"
-          >
-            <option value="">Todos los tipos</option>
-            {Object.entries(KIND_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
+          <h3>Registros</h3>
+          <label className="row small">
+            <span className="field-label">Mostrar</span>
+            <select
+              value={filtroKind}
+              onChange={(e) => setFiltroKind(e.target.value as Kind | "")}
+              className="input"
+            >
+              <option value="">Todos los tipos</option>
+              {KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         {entradas.isLoading && (
-          <>
-            <p className="muted">Cargando bitácora…</p>
+          <div className="stack" aria-busy="true">
             <SlowHint />
-          </>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`skeleton ${s.skeletonEntry}`} />
+            ))}
+            <span className="visually-hidden">Cargando bitácora…</span>
+          </div>
         )}
         {entradas.error && (
           <p className="alert" role="alert">
@@ -180,64 +199,106 @@ export default function PatientDetailPage() {
           </p>
         )}
         {entradas.data && entradas.data.length === 0 && (
-          <p className="muted">Sin entradas todavía.</p>
+          <p className={`card muted ${s.empty}`}>
+            {filtroKind
+              ? `No hay registros de tipo "${KIND_LABELS[filtroKind]}".`
+              : "Todavía no hay registros. Anota el primero arriba."}
+          </p>
         )}
-        <ul className="list-reset stack-sm">
-          {entradas.data?.map((e) => {
-            // Mostrar botones solo al autor es UX; quien autoriza es RLS.
-            const esMia = e.author_id === session?.user.id;
-            if (editandoId === e.id && id) {
+
+        {entradas.data && entradas.data.length > 0 && (
+          <ol className={`list-reset ${s.timeline}`}>
+            {entradas.data.map((e) => {
+              // Mostrar botones solo al autor es UX; quien autoriza es RLS.
+              const esMia = e.author_id === session?.user.id;
+              const autor = autorPorId[e.author_id] ?? "Autor desconocido";
               return (
-                <li key={e.id}>
-                  <EntryForm
-                    patientId={id}
-                    initialValues={e}
-                    onSubmit={(valores) => guardarEdicion(e, valores)}
-                    onCancel={() => setEditandoId(null)}
-                  />
+                <li key={e.id} className={s.entry}>
+                  <Avatar nombre={autor} clave={e.author_id} />
+                  {editandoId === e.id && id ? (
+                    <div className={s.entryEdit}>
+                      <EntryForm
+                        patientId={id}
+                        initialValues={e}
+                        onSubmit={(valores) => guardarEdicion(e, valores)}
+                        onCancel={() => setEditandoId(null)}
+                      />
+                    </div>
+                  ) : (
+                    <article className={`card ${s.entryCard}`}>
+                      <div className={s.entryHead}>
+                        <strong>{esMia ? `${autor} (tú)` : autor}</strong>
+                        <time
+                          className={s.entryTime}
+                          dateTime={e.occurred_at}
+                          title={fechaCompleta(e.occurred_at)}
+                        >
+                          {tiempoRelativo(e.occurred_at)}
+                        </time>
+                        <KindChip kind={e.kind} />
+                      </div>
+                      <p className="entry-content">{e.content}</p>
+                      {esMia && (
+                        <div className={s.entryActions}>
+                          <button
+                            onClick={() => setEditandoId(e.id)}
+                            className="btn btn-ghost"
+                            aria-label={`Editar entrada de ${tiempoRelativo(e.occurred_at)}`}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => borrarEntrada(e.id)}
+                            disabled={borrar.isPending && borrar.variables === e.id}
+                            className="btn btn-ghost btn-danger"
+                            aria-label={`Borrar entrada de ${tiempoRelativo(e.occurred_at)}`}
+                          >
+                            {borrar.isPending && borrar.variables === e.id
+                              ? "Borrando…"
+                              : "Borrar"}
+                          </button>
+                        </div>
+                      )}
+                      {errorPorEntrada[e.id] && (
+                        <p className="field-error" role="alert">
+                          {errorPorEntrada[e.id]}
+                        </p>
+                      )}
+                    </article>
+                  )}
                 </li>
               );
-            }
-            return (
-              <li key={e.id} className="card stack-sm">
-                <div className="row small">
-                  <span className="badge">{KIND_LABELS[e.kind]}</span>
-                  <span className="muted">
-                    {new Date(e.occurred_at).toLocaleString("es-CL")}
-                  </span>
-                  <strong>
-                    {autorPorId[e.author_id] ?? "autor desconocido"}
-                  </strong>
-                </div>
-                <p className="entry-content">{e.content}</p>
-                {esMia && (
-                  <div className="row">
-                    <button onClick={() => setEditandoId(e.id)} className="btn btn-ghost">
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => borrarEntrada(e.id)}
-                      disabled={borrar.isPending && borrar.variables === e.id}
-                      className="btn btn-ghost btn-danger"
-                    >
-                      {borrar.isPending && borrar.variables === e.id ? "Borrando…" : "Borrar"}
-                    </button>
-                  </div>
-                )}
-                {errorPorEntrada[e.id] && (
-                  <p className="field-error" role="alert">{errorPorEntrada[e.id]}</p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+            })}
+          </ol>
+        )}
       </section>
 
-      <section className="stack">
-        <h2>Red de cuidado</h2>
+      <section id="red" className={`stack ${s.section}`} aria-labelledby="titulo-red">
+        <h2 id="titulo-red">Red de cuidado</h2>
         {id && <MembersPanel patientId={id} />}
       </section>
     </AppShell>
   );
 }
 
+/** KPI de relevo familiar: autores distintos en los últimos 7 días. */
+function RelevoBadge({ patientId }: { patientId: string }) {
+  const relevo = useRelevo(patientId);
+  // Si falla o carga, no mostramos nada: es informativo, no bloqueante.
+  if (!relevo.data) return null;
+
+  const n = relevo.data.autores_distintos;
+  const ayuda = "Relevo familiar: personas distintas que registraron en los últimos 7 días.";
+  if (relevo.data.cumple_kpi) {
+    return (
+      <span className="badge badge-success" title={ayuda}>
+        {n} autores esta semana ✓
+      </span>
+    );
+  }
+  return (
+    <span className="badge badge-warning" title={ayuda}>
+      {n === 0 ? "Sin registros esta semana" : "Solo 1 autor esta semana"}
+    </span>
+  );
+}
