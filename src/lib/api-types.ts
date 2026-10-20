@@ -54,7 +54,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Listar */
+        /**
+         * Listar
+         * @description Feed de la bitácora, más reciente primero (occurred_at desc).
+         *
+         *     `kind` y `antes` son aditivos: sin ellos el comportamiento es el de
+         *     siempre (`limit` + `desde`). Con `antes` se pagina hacia atrás; dos
+         *     entradas con exactamente el mismo occurred_at en el borde de página
+         *     podrían saltarse (caso improbable: occurred_at tiene microsegundos).
+         */
         get: operations["listar_patients__patient_id__entries_get"];
         put?: never;
         /** Crear */
@@ -1259,6 +1267,10 @@ export interface operations {
             query?: {
                 limit?: number;
                 desde?: string | null;
+                /** @description Filtra por tipo de entrada (en el servidor). */
+                kind?: ("nota" | "medicamento" | "sintoma" | "animo" | "otro" | "alimentacion" | "ejercicio") | null;
+                /** @description Cursor de paginación: solo entradas con occurred_at estrictamente anterior (ISO 8601). Para la página siguiente, enviar el occurred_at de la última entrada recibida. */
+                antes?: string | null;
             };
             header?: {
                 authorization?: string | null;

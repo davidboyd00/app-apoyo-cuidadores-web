@@ -9,10 +9,10 @@ import { KindChip } from "../components/kind-chip";
 import { MembersPanel } from "../components/members-panel";
 import { SlowHint } from "../components/slow-hint";
 import {
+  useBitacora,
   useDeleteEntry,
   useMembers,
   usePatient,
-  usePatientEntries,
   useRelevo,
   useUpdateEntry,
 } from "../hooks/use-api";
@@ -41,9 +41,8 @@ export default function PatientDetailPage() {
   const { id } = useParams();
   const paciente = usePatient(id);
   const [filtroKind, setFiltroKind] = useState<Kind | "">("");
-  const entradas = usePatientEntries(id, {
-    kind: filtroKind || undefined,
-  });
+  const bitacora = useBitacora(id, filtroKind || undefined);
+  const entradas = bitacora.data?.pages.flat();
   const miembros = useMembers(id);
   const { session } = useAuth();
   const actualizar = useUpdateEntry(id);
@@ -201,7 +200,7 @@ export default function PatientDetailPage() {
           </label>
         </div>
 
-        {entradas.isLoading && (
+        {bitacora.isLoading && (
           <div className="stack" aria-busy="true">
             <SlowHint />
             {[0, 1, 2].map((i) => (
@@ -210,12 +209,12 @@ export default function PatientDetailPage() {
             <span className="visually-hidden">Cargando bitácora…</span>
           </div>
         )}
-        {entradas.error && (
+        {bitacora.isError && !bitacora.isFetchNextPageError && (
           <p className="alert" role="alert">
-            {mensajeError(entradas.error)}
+            {mensajeError(bitacora.error)}
           </p>
         )}
-        {entradas.data && entradas.data.length === 0 && (
+        {entradas && entradas.length === 0 && (
           <p className={`card muted ${s.empty}`}>
             {filtroKind
               ? `No hay registros de tipo "${KIND_LABELS[filtroKind]}".`
@@ -223,9 +222,9 @@ export default function PatientDetailPage() {
           </p>
         )}
 
-        {entradas.data && entradas.data.length > 0 && (
+        {entradas && entradas.length > 0 && (
           <ol className={`list-reset ${s.timeline}`}>
-            {entradas.data.map((e) => {
+            {entradas.map((e) => {
               // Mostrar botones solo al autor es UX; quien autoriza es RLS.
               const esMia = e.author_id === session?.user.id;
               const autor = autorDe(e.author_id, esMia);
@@ -298,6 +297,22 @@ export default function PatientDetailPage() {
               );
             })}
           </ol>
+        )}
+
+        {bitacora.hasNextPage && (
+          <button
+            type="button"
+            onClick={() => bitacora.fetchNextPage()}
+            disabled={bitacora.isFetchingNextPage}
+            className="btn"
+          >
+            {bitacora.isFetchingNextPage ? "Cargando…" : "Ver registros anteriores"}
+          </button>
+        )}
+        {bitacora.isFetchNextPageError && (
+          <p className="alert" role="alert">
+            {mensajeError(bitacora.error)}
+          </p>
         )}
       </section>
 

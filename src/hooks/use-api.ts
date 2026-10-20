@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { api, type Schemas } from "../lib/api";
 
@@ -72,6 +77,17 @@ export function useCreatePatient() {
 
 type EntryKind = Schemas["Entry"]["kind"];
 
+// Query string del feed. `kind` y `antes` se filtran en el servidor.
+function urlEntradas(
+  patientId: string | undefined,
+  params: { limit: number; kind?: EntryKind; antes?: string }
+) {
+  const qs = new URLSearchParams({ limit: String(params.limit) });
+  if (params.kind) qs.set("kind", params.kind);
+  if (params.antes) qs.set("antes", params.antes);
+  return `/patients/${patientId}/entries?${qs}`;
+}
+
 export function usePatientEntries(
   patientId: string | undefined,
   options: { kind?: EntryKind; limit?: number } = {}
@@ -80,12 +96,29 @@ export function usePatientEntries(
   return useQuery({
     enabled: !!patientId,
     queryKey: ["patients", patientId, "entries", { kind, limit }],
-    queryFn: async () => {
-      const data = await api.get<Schemas["Entry"][]>(
-        `/patients/${patientId}/entries?limit=${limit}`
-      );
-      return kind ? data.filter((e) => e.kind === kind) : data;
-    },
+    queryFn: () => api.get<Schemas["Entry"][]>(urlEntradas(patientId, { limit, kind })),
+  });
+}
+
+const PAGINA_BITACORA = 30;
+
+/**
+ * Feed paginado con "Ver más": cada página pide las entradas anteriores a
+ * la última recibida (`antes`). La key cuelga de "entries", así crear,
+ * editar, borrar y el realtime la siguen invalidando.
+ */
+export function useBitacora(patientId: string | undefined, kind?: EntryKind) {
+  return useInfiniteQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "entries", "feed", { kind }],
+    initialPageParam: undefined as string | undefined,
+    queryFn: ({ pageParam }) =>
+      api.get<Schemas["Entry"][]>(
+        urlEntradas(patientId, { limit: PAGINA_BITACORA, kind, antes: pageParam })
+      ),
+    // Página incompleta = no hay más; si no, el cursor es la última fecha.
+    getNextPageParam: (ultima) =>
+      ultima.length < PAGINA_BITACORA ? undefined : ultima[ultima.length - 1].occurred_at,
   });
 }
 
