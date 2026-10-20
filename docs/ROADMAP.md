@@ -56,6 +56,25 @@ notificaciones de medicamentos, ARCO export/delete.
 - Realtime en la bitácora (si da tiempo el día 4, se agrega).
 - Mapa de centros/farmacias.
 
+## Deuda técnica bitácora
+
+Hallazgos de baja severidad de la revisión del 19/10, postergados:
+
+- [ ] **Doble refetch al crear una entrada propia**: la mutación y el
+      evento realtime invalidan `entries` por separado (no duplica
+      entradas, solo requests de más).
+- [ ] **Borrados simultáneos**: `borrar.variables` solo recuerda el
+      último; al borrar dos entradas seguidas el primer botón se
+      rehabilita antes de terminar. Usar un `Set` de ids en curso.
+- [ ] **Edición reenvía `content`** si el original tenía espacios al
+      inicio/fin (el form recorta). Comparar recortado contra recortado.
+- [ ] **Hora relativa estática**: "hace 2 min" no se actualiza con la
+      página abierta, y un `occurred_at` futuro muestra "dentro de 2
+      horas". Re-render cada 60 s y fecha completa para el futuro.
+- [ ] **Borrador perdido en 401/409**: si la sesión expira o falta el
+      consentimiento mientras se escribe, se pierde el texto. Guardarlo
+      en `sessionStorage` por paciente.
+
 ## Riesgos y mitigación
 
 - **Backend en Render duerme** → la primera request tarda ~30s. Loading
