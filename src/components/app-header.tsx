@@ -5,6 +5,7 @@ import { usePatients } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/shell.module.css";
+import { LogoMark } from "./logo";
 
 // Solo guardamos el id (sin datos clínicos) para recordar el último paciente.
 const ULTIMO_PACIENTE_KEY = "cuidadores:ultimo-paciente";
@@ -52,7 +53,7 @@ export function AppHeader() {
     <header className={s.header}>
       <div className={`container ${s.headerInner}`}>
         <Link to="/" className={s.brand}>
-          <LogoMark />
+          <LogoMark className={s.brandMark} />
           Cuidadores
         </Link>
 
@@ -179,19 +180,6 @@ function SwitcherMenu({
         </ul>
       )}
     </div>
-  );
-}
-
-function LogoMark() {
-  // Dos manos/hojas que se sostienen: cuidado compartido.
-  return (
-    <svg className={s.brandMark} width="28" height="28" viewBox="0 0 32 32" aria-hidden="true">
-      <circle cx="16" cy="16" r="15" fill="currentColor" opacity="0.14" />
-      <path
-        d="M16 25c-4.8-3-8-6.2-8-10a4.2 4.2 0 0 1 8-1.8A4.2 4.2 0 0 1 24 15c0 3.8-3.2 7-8 10z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }
 

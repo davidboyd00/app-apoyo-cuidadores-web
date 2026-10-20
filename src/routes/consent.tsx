@@ -1,76 +1,102 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
+import { AuthLayout } from "../components/auth-layout";
 import { useAcceptConsent, useConsent } from "../hooks/use-api";
 import { useAuth } from "../providers/auth-provider";
+import s from "../styles/auth.module.css";
 
 export default function ConsentPage() {
   const { data, isLoading, error } = useConsent();
   const aceptar = useAcceptConsent();
   const { signOut } = useAuth();
+  const [leida, setLeida] = useState(false);
 
   if (isLoading) {
     return (
-      <main className="container page">
-        <p className="muted">Cargando política…</p>
-      </main>
+      <AuthLayout title="Política de privacidad" wide>
+        <div className={`skeleton ${s.skeletonPolicy}`} aria-busy="true" />
+      </AuthLayout>
     );
   }
 
   if (error || !data) {
     return (
-      <main className="container page stack">
-        <h1>Error cargando la política</h1>
+      <AuthLayout title="No pudimos cargar la política" wide>
         <p className="alert" role="alert">
-          {error instanceof Error ? error.message : "Desconocido"}
+          {error instanceof Error ? error.message : "Error desconocido"}
         </p>
-      </main>
+      </AuthLayout>
     );
   }
 
-  return (
-    <main className="container page stack">
-      <h1>Política de privacidad</h1>
-      <p className="muted">
-        Versión vigente: <code>{data.version_vigente}</code>
-      </p>
+  const fechaAceptada = data.aceptada_en
+    ? new Date(data.aceptada_en).toLocaleDateString("es-CL", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
 
-      <article className="card policy-doc">
-        {/* El texto llega como markdown; en MVP lo mostramos plano con pre-wrap. */}
+  return (
+    <AuthLayout
+      title="Política de privacidad"
+      subtitle={
+        <>
+          Cuidamos los datos de salud según la Ley 21.719. Versión{" "}
+          {data.version_vigente}.
+        </>
+      }
+      wide
+    >
+      <article
+        className="card policy-doc"
+        tabIndex={0}
+        aria-label="Texto de la política de privacidad"
+      >
+        {/* El texto llega como markdown; lo mostramos plano con pre-wrap. */}
         <pre className="policy-text">{data.texto}</pre>
       </article>
 
-      {aceptar.isError && (
-        <p className="alert" role="alert">
-          {aceptar.error instanceof Error ? aceptar.error.message : "Error"}
-        </p>
-      )}
-
-      {data.aceptada_en ? (
+      {fechaAceptada ? (
         // Relectura desde el footer: ya aceptada, sin botones de aceptar.
         <div className="row-between">
-          <p className="muted">
-            Aceptaste esta versión el{" "}
-            {new Date(data.aceptada_en).toLocaleDateString("es-CL")}.
-          </p>
+          <p className="badge">Aceptada el {fechaAceptada}</p>
           <Link to="/" className="btn">
             Volver al inicio
           </Link>
         </div>
       ) : (
-      <div className="row">
-        <button onClick={() => signOut()} className="btn">
-          No acepto, salir
-        </button>
-        <button
-          onClick={() => aceptar.mutate(data.version_vigente)}
-          disabled={aceptar.isPending}
-          className="btn btn-primary"
-        >
-          {aceptar.isPending ? "Guardando…" : "Acepto la política"}
-        </button>
-      </div>
+        <div className="stack">
+          <label className={s.checkbox}>
+            <input
+              type="checkbox"
+              checked={leida}
+              onChange={(e) => setLeida(e.target.checked)}
+            />
+            He leído y acepto la política de privacidad
+          </label>
+
+          {aceptar.isError && (
+            <p className="alert" role="alert">
+              {aceptar.error instanceof Error ? aceptar.error.message : "Error"}
+            </p>
+          )}
+
+          <div className={s.actions}>
+            <button onClick={() => signOut()} className="btn btn-ghost">
+              No acepto, salir
+            </button>
+            <button
+              onClick={() => aceptar.mutate(data.version_vigente)}
+              disabled={!leida || aceptar.isPending}
+              className="btn btn-primary"
+            >
+              {aceptar.isPending ? "Guardando…" : "Continuar"}
+            </button>
+          </div>
+        </div>
       )}
-    </main>
+    </AuthLayout>
   );
 }
-

@@ -1,31 +1,39 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 
+import { AuthLayout } from "../components/auth-layout";
+import { FormField } from "../components/form-field";
 import { useAuth } from "../providers/auth-provider";
+import { mensajeAuth, validarEmail } from "../utils/auth-errores";
 
 export default function SignUpPage() {
   const { session, signUp } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorEmail, setErrorEmail] = useState<string | null>(null);
+  const [errorPassword, setErrorPassword] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
 
   if (session) return <Navigate to="/" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-    if (password.length < 8) {
-      setError("Contraseña débil: mínimo 8 caracteres.");
-      return;
-    }
+    const eEmail = validarEmail(email);
+    const ePass = password.length < 8 ? "Usa al menos 8 caracteres." : null;
+    setErrorEmail(eEmail);
+    setErrorPassword(ePass);
+    if (eEmail || ePass) return;
+
     setLoading(true);
     try {
       await signUp(email.trim(), password);
       setListo(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      const mensaje = mensajeAuth(err);
+      // "ya existe" o "correo inválido" van bajo el correo; el resto, bajo la contraseña.
+      if (/correo/i.test(mensaje)) setErrorEmail(mensaje);
+      else setErrorPassword(mensaje);
     } finally {
       setLoading(false);
     }
@@ -33,50 +41,70 @@ export default function SignUpPage() {
 
   if (listo) {
     return (
-      <main className="container page stack">
-        <h1>Cuenta creada</h1>
-        <p>Revisa tu correo para confirmar la cuenta antes de iniciar sesión.</p>
-        <Link to="/sign-in">Volver a entrar</Link>
-      </main>
+      <AuthLayout
+        title="Revisa tu correo"
+        subtitle={
+          <>
+            Te enviamos un enlace a <strong>{email.trim()}</strong> para confirmar la
+            cuenta. Después de confirmarla, ya puedes entrar.
+          </>
+        }
+      >
+        <Link to="/sign-in" className="btn btn-primary btn-block">
+          Ir a entrar
+        </Link>
+      </AuthLayout>
     );
   }
 
   return (
-    <main className="container page stack">
-      <h1>Crear cuenta</h1>
-      <p className="muted">
-        Al entrar te vamos a pedir aceptar la política de privacidad.
-      </p>
-
-      <form onSubmit={onSubmit} className="stack">
-        <input
-          type="email"
-          placeholder="correo@ejemplo.cl"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="input"
-        />
-        <input
-          type="password"
-          placeholder="contraseña (mínimo 8)"
-          autoComplete="new-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="input"
-        />
-        {error && <p className="field-error" role="alert">{error}</p>}
-        <button type="submit" disabled={loading} className="btn btn-primary">
-          {loading ? "Creando…" : "Registrarme"}
+    <AuthLayout
+      title="Crear cuenta"
+      subtitle="Registra y comparte con tu familia el día a día de la persona que cuidas."
+      footer={
+        <>
+          ¿Ya tienes cuenta? <Link to="/sign-in">Entrar</Link>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="stack" noValidate>
+        <FormField label="Correo electrónico" error={errorEmail}>
+          {(props) => (
+            <input
+              {...props}
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="nombre@correo.cl"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+            />
+          )}
+        </FormField>
+        <FormField
+          label="Contraseña"
+          hint="Mínimo 8 caracteres."
+          error={errorPassword}
+        >
+          {(props) => (
+            <input
+              {...props}
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+            />
+          )}
+        </FormField>
+        <p className="muted small">
+          Al entrar te pediremos aceptar la política de privacidad.
+        </p>
+        <button type="submit" disabled={loading} className="btn btn-primary btn-block">
+          {loading ? "Creando cuenta…" : "Crear cuenta"}
         </button>
       </form>
-
-      <p>
-        ¿Ya tienes cuenta? <Link to="/sign-in">Entrar</Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
-

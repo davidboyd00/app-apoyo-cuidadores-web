@@ -358,6 +358,13 @@ textarea.input {
   font-size: var(--fs-sm);
 }
 
+/* El contenedor del error existe siempre (aria-live necesita estar en el
+   árbol de accesibilidad antes del mensaje). Vacío no debe sumar espacio,
+   pero tampoco se oculta con display:none (dejaría de anunciarse). */
+.field .field-error:empty {
+  margin-top: -6px;
+}
+
 .alert {
   padding: 12px 16px;
   border-radius: var(--radius-sm);

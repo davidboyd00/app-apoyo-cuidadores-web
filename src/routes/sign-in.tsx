@@ -1,64 +1,81 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate } from "react-router-dom";
 
+import { AuthLayout } from "../components/auth-layout";
+import { FormField } from "../components/form-field";
 import { useAuth } from "../providers/auth-provider";
+import { mensajeAuth, validarEmail } from "../utils/auth-errores";
 
 export default function SignInPage() {
   const { session, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorEmail, setErrorEmail] = useState<string | null>(null);
+  const [errorPassword, setErrorPassword] = useState<string | null>(null);
 
   if (session) return <Navigate to="/" replace />;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
+    const eEmail = validarEmail(email);
+    const ePass = password ? null : "Ingresa tu contraseña.";
+    setErrorEmail(eEmail);
+    setErrorPassword(ePass);
+    if (eEmail || ePass) return;
+
     setLoading(true);
     try {
       await signIn(email.trim(), password);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error desconocido");
+      // Error de credenciales: se muestra bajo la contraseña.
+      setErrorPassword(mensajeAuth(err));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="container page stack">
-      <h1>Entrar</h1>
-      <p className="muted">Usa tu correo del grupo de cuidado.</p>
-
-      <form onSubmit={onSubmit} className="stack">
-        <input
-          type="email"
-          placeholder="correo@ejemplo.cl"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="input"
-        />
-        <input
-          type="password"
-          placeholder="contraseña"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="input"
-        />
-        {error && <p className="field-error" role="alert">{error}</p>}
-        <button type="submit" disabled={loading} className="btn btn-primary">
+    <AuthLayout
+      title="Entrar"
+      subtitle="Un espacio compartido para que la familia registre y coordine el cuidado."
+      footer={
+        <>
+          ¿No tienes cuenta? <Link to="/sign-up">Crear una cuenta</Link>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="stack" noValidate>
+        <FormField label="Correo electrónico" error={errorEmail}>
+          {(props) => (
+            <input
+              {...props}
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              placeholder="nombre@correo.cl"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input"
+            />
+          )}
+        </FormField>
+        <FormField label="Contraseña" error={errorPassword}>
+          {(props) => (
+            <input
+              {...props}
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+            />
+          )}
+        </FormField>
+        <button type="submit" disabled={loading} className="btn btn-primary btn-block">
           {loading ? "Entrando…" : "Entrar"}
         </button>
       </form>
-
-      <p>
-        ¿No tienes cuenta? <Link to="/sign-up">Regístrate</Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
-
