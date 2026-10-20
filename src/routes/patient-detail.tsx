@@ -365,7 +365,11 @@ export default function PatientDetailPage() {
   );
 }
 
-/** KPI de relevo familiar: autores distintos en los últimos 7 días. */
+/**
+ * KPI de relevo familiar: autores distintos en los últimos 7 días. La
+ * ventana es móvil (backend: desde = ahora − 7 días, por occurred_at), no
+ * la semana calendario; por eso el texto no dice "esta semana".
+ */
 function RelevoBadge({ patientId }: { patientId: string }) {
   const relevo = useRelevo(patientId);
   // Si falla o carga, no mostramos nada: es informativo, no bloqueante.
@@ -376,13 +380,13 @@ function RelevoBadge({ patientId }: { patientId: string }) {
   if (relevo.data.cumple_kpi) {
     return (
       <span className="badge badge-success" title={ayuda}>
-        {n} autores esta semana ✓
+        {n} autores en los últimos 7 días ✓
       </span>
     );
   }
   return (
     <span className="badge badge-warning" title={ayuda}>
-      {n === 0 ? "Sin registros esta semana" : "Solo 1 autor esta semana"}
+      {n === 0 ? "Sin registros en los últimos 7 días" : "Solo 1 autor en los últimos 7 días"}
     </span>
   );
 }
