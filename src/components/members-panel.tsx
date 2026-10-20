@@ -48,26 +48,26 @@ export function MembersPanel({ patientId }: { patientId: string }) {
   }
 
   return (
-    <div style={styles.wrap}>
-      {miembros.isLoading && <p style={styles.muted}>Cargando miembros…</p>}
+    <div className="stack">
+      {miembros.isLoading && <p className="muted">Cargando miembros…</p>}
       {miembros.error && (
-        <p style={styles.error}>
+        <p className="alert" role="alert">
           {miembros.error instanceof Error ? miembros.error.message : "Error"}
         </p>
       )}
       {miembros.data && miembros.data.length === 0 && (
-        <p style={styles.muted}>Sin miembros todavía.</p>
+        <p className="muted">Sin miembros todavía.</p>
       )}
 
-      <ul style={styles.list}>
+      <ul className="list-reset stack-sm">
         {miembros.data?.map((m) => (
-          <li key={m.user_id} style={styles.item}>
+          <li key={m.user_id} className="card row-between">
             <div>
               <strong>{m.nombre || m.email}</strong>
-              {m.nombre && <span style={styles.muted}> · {m.email}</span>}
-              <div style={styles.meta}>
-                <span style={styles.rolBadge}>{ROL_LABELS[m.role]}</span>
-                <span style={styles.muted}>
+              {m.nombre && <span className="muted"> · {m.email}</span>}
+              <div className="row small">
+                <span className="badge">{ROL_LABELS[m.role]}</span>
+                <span className="muted">
                   Desde {new Date(m.joined_at).toLocaleDateString("es-CL")}
                 </span>
               </div>
@@ -75,30 +75,30 @@ export function MembersPanel({ patientId }: { patientId: string }) {
             <button
               onClick={() => onQuitar(m)}
               disabled={quitar.isPending && quitar.variables === m.user_id}
-              style={styles.danger}
+              className="btn btn-ghost btn-danger"
             >
               {quitar.isPending && quitar.variables === m.user_id ? "Quitando…" : "Quitar"}
             </button>
           </li>
         ))}
       </ul>
-      {errorQuitar && <p style={styles.error}>{errorQuitar}</p>}
+      {errorQuitar && <p className="alert" role="alert">{errorQuitar}</p>}
 
-      <form onSubmit={onInvitar} style={styles.form}>
-        <h3 style={{ margin: 0, fontSize: 15 }}>Invitar a un familiar</h3>
-        <div style={styles.row}>
+      <form onSubmit={onInvitar} className="card stack-sm">
+        <h3>Invitar a un familiar</h3>
+        <div className="row">
           <input
             type="email"
             required
             placeholder="correo@ejemplo.cl"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ ...styles.input, flex: 2 }}
+            className="input"
           />
           <select
             value={rol}
             onChange={(e) => setRol(e.target.value as Rol)}
-            style={styles.input}
+            className="input"
           >
             {Object.entries(ROL_LABELS).map(([v, l]) => (
               <option key={v} value={v}>
@@ -107,16 +107,16 @@ export function MembersPanel({ patientId }: { patientId: string }) {
             ))}
           </select>
         </div>
-        <p style={styles.hint}>La persona debe tener una cuenta creada con ese correo.</p>
+        <p className="muted small">La persona debe tener una cuenta creada con ese correo.</p>
         {invitar.isError && (
-          <p style={styles.error}>
+          <p className="field-error" role="alert">
             {invitar.error instanceof Error ? invitar.error.message : "Error"}
           </p>
         )}
         <button
           type="submit"
           disabled={invitar.isPending || !email.trim()}
-          style={styles.primary}
+          className="btn btn-primary"
         >
           {invitar.isPending ? "Invitando…" : "Invitar"}
         </button>
@@ -125,65 +125,3 @@ export function MembersPanel({ patientId }: { patientId: string }) {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { display: "flex", flexDirection: "column", gap: 12 },
-  muted: { color: "#666", margin: 0 },
-  hint: { color: "#666", margin: 0, fontSize: 13 },
-  list: { listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 8 },
-  item: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    padding: 14,
-    borderRadius: 8,
-    border: "1px solid #eee",
-    background: "#fafafa",
-  },
-  meta: { display: "flex", gap: 10, alignItems: "center", marginTop: 4, fontSize: 13 },
-  rolBadge: {
-    padding: "2px 8px",
-    borderRadius: 12,
-    background: "#0A84FF22",
-    color: "#0A84FF",
-    fontWeight: 600,
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    padding: 16,
-    borderRadius: 8,
-    border: "1px solid #e5e5e5",
-    background: "#fff",
-  },
-  row: { display: "flex", gap: 8, flexWrap: "wrap" },
-  input: {
-    padding: 10,
-    fontSize: 14,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-    flex: 1,
-    minWidth: 140,
-  },
-  primary: {
-    padding: "10px 14px",
-    borderRadius: 6,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-    alignSelf: "flex-start",
-  },
-  danger: {
-    padding: "6px 12px",
-    borderRadius: 6,
-    border: "1px solid #e5b5b5",
-    background: "#fff",
-    color: "#c00",
-    cursor: "pointer",
-  },
-  error: { color: "#c00", fontSize: 13, margin: 0 },
-};

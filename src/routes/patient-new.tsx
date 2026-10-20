@@ -23,57 +23,57 @@ export default function PatientNewPage() {
   }
 
   return (
-    <main style={styles.wrap}>
-      <nav style={styles.breadcrumb}>
+    <main className="container page stack">
+      <nav>
         <Link to="/">← Volver a pacientes</Link>
       </nav>
       <h1>Nuevo paciente</h1>
-      <p style={styles.muted}>
+      <p className="muted">
         Quien crea el paciente queda automáticamente como admin del grupo.
       </p>
 
-      <form onSubmit={onSubmit} style={styles.form}>
-        <label style={styles.label}>
-          <span>Nombre</span>
+      <form onSubmit={onSubmit} className="stack">
+        <label className="field">
+          <span className="field-label">Nombre</span>
           <input
             required
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            style={styles.input}
+            className="input"
             placeholder="Doña Elba"
           />
         </label>
 
-        <label style={styles.label}>
-          <span>Fecha de nacimiento (opcional)</span>
+        <label className="field">
+          <span className="field-label">Fecha de nacimiento (opcional)</span>
           <input
             type="date"
             value={fechaNacimiento}
             onChange={(e) => setFechaNacimiento(e.target.value)}
-            style={styles.input}
+            className="input"
           />
         </label>
 
-        <label style={styles.label}>
-          <span>Notas clínicas (opcional)</span>
+        <label className="field">
+          <span className="field-label">Notas clínicas (opcional)</span>
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
-            style={{ ...styles.input, minHeight: 90, resize: "vertical" }}
+            className="input"
             placeholder="Alergias, comorbilidades, etc."
           />
         </label>
 
         {crear.isError && (
-          <div style={styles.error}>
+          <p className="alert" role="alert">
             {crear.error instanceof Error ? crear.error.message : "Error"}
-          </div>
+          </p>
         )}
 
         <button
           type="submit"
           disabled={crear.isPending || !nombre.trim()}
-          style={styles.primary}
+          className="btn btn-primary"
         >
           {crear.isPending ? "Guardando…" : "Crear paciente"}
         </button>
@@ -82,28 +82,3 @@ export default function PatientNewPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { maxWidth: 560, margin: "40px auto", padding: 24, fontFamily: "system-ui" },
-  breadcrumb: { marginBottom: 12 },
-  muted: { color: "#666" },
-  form: { display: "flex", flexDirection: "column", gap: 14, marginTop: 20 },
-  label: { display: "flex", flexDirection: "column", gap: 4 },
-  input: {
-    padding: 10,
-    fontSize: 15,
-    borderRadius: 8,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-  },
-  primary: {
-    marginTop: 6,
-    padding: 12,
-    borderRadius: 8,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  error: { color: "#c00", fontSize: 14 },
-};

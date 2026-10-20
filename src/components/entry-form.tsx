@@ -69,12 +69,12 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <div style={styles.row}>
+    <form onSubmit={handleSubmit} className="card stack-sm">
+      <div className="row">
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value as Kind)}
-          style={styles.input}
+          className="input"
         >
           {KINDS.map((k) => (
             <option key={k.value} value={k.value}>
@@ -86,7 +86,7 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
           type="datetime-local"
           value={occurredAt}
           onChange={(e) => setOccurredAt(e.target.value)}
-          style={styles.input}
+          className="input"
         />
       </div>
       <textarea
@@ -94,19 +94,19 @@ export function EntryForm({ patientId, initialValues, onSubmit, onCancel }: Prop
         placeholder="¿Qué pasó?"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        style={{ ...styles.input, minHeight: 80, resize: "vertical" }}
+        className="input"
       />
-      {error && <div style={styles.error}>{error}</div>}
-      <div style={styles.actions}>
+      {error && <p className="field-error" role="alert">{error}</p>}
+      <div className="row">
         <button
           type="submit"
           disabled={guardando || !content.trim()}
-          style={styles.primary}
+          className="btn btn-primary"
         >
           {guardando ? "Guardando…" : editando ? "Guardar cambios" : "Registrar"}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} style={styles.secondary}>
+          <button type="button" onClick={onCancel} className="btn">
             Cancelar
           </button>
         )}
@@ -121,42 +121,3 @@ function isoLocal(d: Date): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 10,
-    padding: 16,
-    borderRadius: 8,
-    border: "1px solid #e5e5e5",
-    background: "#fff",
-  },
-  row: { display: "flex", gap: 8, flexWrap: "wrap" },
-  input: {
-    padding: 10,
-    fontSize: 14,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-    flex: 1,
-    minWidth: 160,
-  },
-  actions: { display: "flex", gap: 8 },
-  primary: {
-    padding: "10px 14px",
-    borderRadius: 6,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  secondary: {
-    padding: "10px 14px",
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    background: "#fff",
-    cursor: "pointer",
-  },
-  error: { color: "#c00", fontSize: 13 },
-};

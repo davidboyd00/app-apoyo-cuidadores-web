@@ -26,11 +26,11 @@ export default function SignInPage() {
   }
 
   return (
-    <main style={styles.wrap}>
+    <main className="container page stack">
       <h1>Entrar</h1>
-      <p style={styles.muted}>Usa tu correo del grupo de cuidado.</p>
+      <p className="muted">Usa tu correo del grupo de cuidado.</p>
 
-      <form onSubmit={onSubmit} style={styles.form}>
+      <form onSubmit={onSubmit} className="stack">
         <input
           type="email"
           placeholder="correo@ejemplo.cl"
@@ -38,7 +38,7 @@ export default function SignInPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={styles.input}
+          className="input"
         />
         <input
           type="password"
@@ -47,10 +47,10 @@ export default function SignInPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={styles.input}
+          className="input"
         />
-        {error && <div style={styles.error}>{error}</div>}
-        <button type="submit" disabled={loading} style={styles.primary}>
+        {error && <p className="field-error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Entrando…" : "Entrar"}
         </button>
       </form>
@@ -62,20 +62,3 @@ export default function SignInPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { maxWidth: 400, margin: "80px auto", padding: 24, fontFamily: "system-ui" },
-  muted: { color: "#666" },
-  form: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 },
-  input: { padding: 10, fontSize: 16, borderRadius: 8, border: "1px solid #ccc" },
-  primary: {
-    padding: 12,
-    fontSize: 16,
-    borderRadius: 8,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  error: { color: "#c00", fontSize: 14 },
-};

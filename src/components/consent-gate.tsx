@@ -15,18 +15,20 @@ export function ConsentGate({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div style={{ padding: 24 }}>
-        Cargando política…
+      <main className="container page" aria-busy="true">
+        <p className="muted">Cargando política…</p>
         <SlowHint />
-      </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div style={{ padding: 24, color: "#c00" }}>
-        No pudimos verificar tu consentimiento. Reintenta en unos segundos.
-      </div>
+      <main className="container page">
+        <p className="alert" role="alert">
+          No pudimos verificar tu consentimiento. Reintenta en unos segundos.
+        </p>
+      </main>
     );
   }
 

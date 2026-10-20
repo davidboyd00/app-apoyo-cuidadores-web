@@ -115,48 +115,50 @@ export default function PatientDetailPage() {
 
   if (paciente.isLoading) {
     return (
-      <div style={{ padding: 24 }}>
-        Cargando…
+      <main className="container page" aria-busy="true">
+        <p className="muted">Cargando…</p>
         <SlowHint />
-      </div>
+      </main>
     );
   }
   if (paciente.error || !paciente.data) {
     return (
-      <div style={{ padding: 24, color: "#c00" }}>
-        {paciente.error instanceof Error ? paciente.error.message : "Error"}
-      </div>
+      <main className="container page">
+        <p className="alert" role="alert">
+          {paciente.error instanceof Error ? paciente.error.message : "Error"}
+        </p>
+      </main>
     );
   }
 
   return (
-    <main style={styles.wrap}>
+    <main className="container page stack">
       <AppHeader />
-      <nav style={styles.breadcrumb}>
+      <nav>
         <Link to="/">← Pacientes</Link>
       </nav>
-      <header>
-        <h1 style={{ margin: 0 }}>{paciente.data.nombre}</h1>
+      <header className="stack-sm">
+        <h1>{paciente.data.nombre}</h1>
         {paciente.data.fecha_nacimiento && (
-          <p style={styles.muted}>
+          <p className="muted">
             Nacido {new Date(paciente.data.fecha_nacimiento).toLocaleDateString("es-CL")}
           </p>
         )}
         {paciente.data.notas && <p>{paciente.data.notas}</p>}
       </header>
 
-      <section style={styles.section}>
+      <section className="stack">
         <h2>Registrar en la bitácora</h2>
         {id && <EntryForm patientId={id} />}
       </section>
 
-      <section style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={{ margin: 0 }}>Bitácora</h2>
+      <section className="stack">
+        <div className="row-between">
+          <h2>Bitácora</h2>
           <select
             value={filtroKind}
             onChange={(e) => setFiltroKind(e.target.value as Kind | "")}
-            style={styles.filter}
+            className="input"
           >
             <option value="">Todos los tipos</option>
             {Object.entries(KIND_LABELS).map(([v, l]) => (
@@ -169,19 +171,19 @@ export default function PatientDetailPage() {
 
         {entradas.isLoading && (
           <>
-            <p>Cargando bitácora…</p>
+            <p className="muted">Cargando bitácora…</p>
             <SlowHint />
           </>
         )}
         {entradas.error && (
-          <p style={styles.error}>
+          <p className="alert" role="alert">
             {entradas.error instanceof Error ? entradas.error.message : "Error"}
           </p>
         )}
         {entradas.data && entradas.data.length === 0 && (
-          <p style={styles.muted}>Sin entradas todavía.</p>
+          <p className="muted">Sin entradas todavía.</p>
         )}
-        <ul style={styles.list}>
+        <ul className="list-reset stack-sm">
           {entradas.data?.map((e) => {
             // Mostrar botones solo al autor es UX; quien autoriza es RLS.
             const esMia = e.author_id === session?.user.id;
@@ -198,33 +200,33 @@ export default function PatientDetailPage() {
               );
             }
             return (
-              <li key={e.id} style={styles.entry}>
-                <div style={styles.entryHeader}>
-                  <span style={styles.kindBadge}>{KIND_LABELS[e.kind]}</span>
-                  <span style={styles.muted}>
+              <li key={e.id} className="card stack-sm">
+                <div className="row small">
+                  <span className="badge">{KIND_LABELS[e.kind]}</span>
+                  <span className="muted">
                     {new Date(e.occurred_at).toLocaleString("es-CL")}
                   </span>
-                  <span style={styles.author}>
+                  <strong>
                     {autorPorId[e.author_id] ?? "autor desconocido"}
-                  </span>
+                  </strong>
                 </div>
-                <p style={styles.entryContent}>{e.content}</p>
+                <p className="entry-content">{e.content}</p>
                 {esMia && (
-                  <div style={styles.entryActions}>
-                    <button onClick={() => setEditandoId(e.id)} style={styles.linkButton}>
+                  <div className="row">
+                    <button onClick={() => setEditandoId(e.id)} className="btn btn-ghost">
                       Editar
                     </button>
                     <button
                       onClick={() => borrarEntrada(e.id)}
                       disabled={borrar.isPending && borrar.variables === e.id}
-                      style={{ ...styles.linkButton, color: "#c00" }}
+                      className="btn btn-ghost btn-danger"
                     >
                       {borrar.isPending && borrar.variables === e.id ? "Borrando…" : "Borrar"}
                     </button>
                   </div>
                 )}
                 {errorPorEntrada[e.id] && (
-                  <p style={styles.error}>{errorPorEntrada[e.id]}</p>
+                  <p className="field-error" role="alert">{errorPorEntrada[e.id]}</p>
                 )}
               </li>
             );
@@ -232,7 +234,7 @@ export default function PatientDetailPage() {
         </ul>
       </section>
 
-      <section style={styles.section}>
+      <section className="stack">
         <h2>Red de cuidado</h2>
         {id && <MembersPanel patientId={id} />}
       </section>
@@ -240,62 +242,3 @@ export default function PatientDetailPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { maxWidth: 760, margin: "40px auto", padding: 24, fontFamily: "system-ui" },
-  breadcrumb: { marginBottom: 12 },
-  muted: { color: "#666", margin: 0 },
-  section: { marginTop: 28 },
-  sectionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    gap: 12,
-    flexWrap: "wrap",
-  },
-  filter: {
-    padding: 8,
-    fontSize: 14,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-  },
-  list: { listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 10 },
-  entry: {
-    padding: 14,
-    borderRadius: 8,
-    border: "1px solid #eee",
-    background: "#fafafa",
-  },
-  entryHeader: {
-    display: "flex",
-    gap: 10,
-    alignItems: "center",
-    flexWrap: "wrap",
-    marginBottom: 6,
-    fontSize: 13,
-  },
-  kindBadge: {
-    padding: "2px 8px",
-    borderRadius: 12,
-    background: "#0A84FF22",
-    color: "#0A84FF",
-    fontWeight: 600,
-  },
-  author: {
-    marginLeft: "auto",
-    color: "#333",
-    fontWeight: 500,
-  },
-  entryContent: { margin: 0, whiteSpace: "pre-wrap" },
-  entryActions: { display: "flex", gap: 12, marginTop: 8, fontSize: 13 },
-  linkButton: {
-    padding: 0,
-    border: "none",
-    background: "none",
-    color: "#0A84FF",
-    cursor: "pointer",
-    fontSize: 13,
-  },
-  error: { color: "#c00", fontSize: 13, margin: "6px 0 0" },
-};

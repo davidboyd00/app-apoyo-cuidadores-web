@@ -33,7 +33,7 @@ export default function SignUpPage() {
 
   if (listo) {
     return (
-      <main style={styles.wrap}>
+      <main className="container page stack">
         <h1>Cuenta creada</h1>
         <p>Revisa tu correo para confirmar la cuenta antes de iniciar sesión.</p>
         <Link to="/sign-in">Volver a entrar</Link>
@@ -42,13 +42,13 @@ export default function SignUpPage() {
   }
 
   return (
-    <main style={styles.wrap}>
+    <main className="container page stack">
       <h1>Crear cuenta</h1>
-      <p style={styles.muted}>
+      <p className="muted">
         Al entrar te vamos a pedir aceptar la política de privacidad.
       </p>
 
-      <form onSubmit={onSubmit} style={styles.form}>
+      <form onSubmit={onSubmit} className="stack">
         <input
           type="email"
           placeholder="correo@ejemplo.cl"
@@ -56,7 +56,7 @@ export default function SignUpPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={styles.input}
+          className="input"
         />
         <input
           type="password"
@@ -65,10 +65,10 @@ export default function SignUpPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={styles.input}
+          className="input"
         />
-        {error && <div style={styles.error}>{error}</div>}
-        <button type="submit" disabled={loading} style={styles.primary}>
+        {error && <p className="field-error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? "Creando…" : "Registrarme"}
         </button>
       </form>
@@ -80,20 +80,3 @@ export default function SignUpPage() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { maxWidth: 400, margin: "80px auto", padding: 24, fontFamily: "system-ui" },
-  muted: { color: "#666" },
-  form: { display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 },
-  input: { padding: 10, fontSize: 16, borderRadius: 8, border: "1px solid #ccc" },
-  primary: {
-    padding: 12,
-    fontSize: 16,
-    borderRadius: 8,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-  },
-  error: { color: "#c00", fontSize: 14 },
-};

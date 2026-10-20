@@ -7,7 +7,11 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
 
   if (loading) {
-    return <div style={{ padding: 24 }}>Cargando…</div>;
+    return (
+      <main className="container page" aria-busy="true">
+        <p className="muted">Cargando…</p>
+      </main>
+    );
   }
   if (!session) {
     return <Navigate to="/sign-in" replace />;

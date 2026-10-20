@@ -17,12 +17,8 @@ export function SlowHint({ ms = 5000 }: { ms?: number }) {
 
   if (!lento) return null;
   return (
-    <p style={styles.hint} role="status">
+    <p className="slow-hint" role="status">
       El servidor está despertando, puede tardar hasta 30 s…
     </p>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  hint: { color: "#8a6d00", fontSize: 14, margin: "6px 0" },
-};

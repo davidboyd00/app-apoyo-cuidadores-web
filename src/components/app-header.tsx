@@ -47,21 +47,21 @@ export function AppHeader() {
   }
 
   return (
-    <header style={styles.bar}>
-      <div style={styles.actions}>
-        <Link to="/" style={styles.brand}>
+    <header className="row-between">
+      <div className="row">
+        <Link to="/">
           Cuidadores
         </Link>
-        {pacientes.isLoading && <span style={styles.muted}>Cargando pacientes…</span>}
+        {pacientes.isLoading && <span className="muted small">Cargando pacientes…</span>}
         {pacientes.error && (
-          <span style={styles.error}>No se pudieron cargar los pacientes</span>
+          <span className="field-error">No se pudieron cargar los pacientes</span>
         )}
         {pacientes.data && pacientes.data.length > 0 && (
           <select
             aria-label="Cambiar de paciente"
             value={seleccionado}
             onChange={(e) => onCambiarPaciente(e.target.value)}
-            style={styles.select}
+            className="input"
           >
             <option value="" disabled>
               Elegir paciente…
@@ -74,12 +74,12 @@ export function AppHeader() {
           </select>
         )}
       </div>
-      <div style={styles.actions}>
-        <span style={styles.muted}>{session?.user?.email}</span>
-        <Link to="/me" style={styles.link}>
+      <div className="row">
+        <span className="muted small">{session?.user?.email}</span>
+        <Link to="/me">
           Mi perfil
         </Link>
-        <button onClick={() => signOut()} style={styles.secondary}>
+        <button onClick={() => signOut()} className="btn">
           Cerrar sesión
         </button>
       </div>
@@ -87,35 +87,3 @@ export function AppHeader() {
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  bar: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-    flexWrap: "wrap",
-    paddingBottom: 16,
-    marginBottom: 20,
-    borderBottom: "1px solid #eee",
-  },
-  brand: { fontWeight: 700, fontSize: 18, color: "inherit", textDecoration: "none" },
-  actions: { display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" },
-  muted: { color: "#666", fontSize: 14 },
-  error: { color: "#c00", fontSize: 14 },
-  select: {
-    padding: 8,
-    fontSize: 14,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-    maxWidth: 220,
-  },
-  link: { color: "#0A84FF", textDecoration: "none", fontWeight: 500 },
-  secondary: {
-    padding: "8px 12px",
-    borderRadius: 8,
-    border: "1px solid #ccc",
-    background: "#fff",
-    cursor: "pointer",
-  },
-};

@@ -8,18 +8,18 @@ export default function ProfilePage() {
   const perfil = useProfile();
 
   return (
-    <main style={styles.wrap}>
+    <main className="container page stack">
       <AppHeader />
-      <h1 style={{ marginTop: 0 }}>Mi perfil</h1>
-      <p style={styles.muted}>
+      <h1>Mi perfil</h1>
+      <p className="muted">
         Tu nombre es lo que ve tu red de cuidado en la bitácora.
       </p>
 
       {perfil.isLoading && <p>Cargando perfil…</p>}
       {perfil.error && (
-        <div style={styles.error}>
+        <p className="alert" role="alert">
           {perfil.error instanceof Error ? perfil.error.message : "Error"}
-        </div>
+        </p>
       )}
       {perfil.data && <ProfileForm key={perfil.data.id} perfil={perfil.data} />}
     </main>
@@ -41,9 +41,9 @@ function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} style={styles.form}>
-      <label style={styles.label}>
-        Nombre
+    <form onSubmit={onSubmit} className="card stack">
+      <label className="field">
+        <span className="field-label">Nombre</span>
         <input
           value={nombre}
           onChange={(e) => {
@@ -51,11 +51,11 @@ function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
             guardar.reset();
           }}
           placeholder="Ej: María Pérez"
-          style={styles.input}
+          className="input"
         />
       </label>
-      <label style={styles.label}>
-        Teléfono
+      <label className="field">
+        <span className="field-label">Teléfono</span>
         <input
           type="tel"
           value={telefono}
@@ -64,56 +64,21 @@ function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
             guardar.reset();
           }}
           placeholder="+56 9 1234 5678"
-          style={styles.input}
+          className="input"
         />
       </label>
 
       {guardar.isError && (
-        <div style={styles.error}>
+        <p className="alert" role="alert">
           {guardar.error instanceof Error ? guardar.error.message : "Error"}
-        </div>
+        </p>
       )}
-      {guardar.isSuccess && <div style={styles.ok}>Guardado</div>}
+      {guardar.isSuccess && <p className="alert alert-success">Guardado</p>}
 
-      <button type="submit" disabled={guardar.isPending} style={styles.primary}>
+      <button type="submit" disabled={guardar.isPending} className="btn btn-primary">
         {guardar.isPending ? "Guardando…" : "Guardar"}
       </button>
     </form>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  wrap: { maxWidth: 760, margin: "40px auto", padding: 24, fontFamily: "system-ui" },
-  muted: { color: "#666", marginTop: 0 },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 14,
-    padding: 16,
-    borderRadius: 8,
-    border: "1px solid #e5e5e5",
-    background: "#fff",
-    maxWidth: 420,
-  },
-  label: { display: "flex", flexDirection: "column", gap: 6, fontSize: 14, fontWeight: 500 },
-  input: {
-    padding: 10,
-    fontSize: 14,
-    borderRadius: 6,
-    border: "1px solid #ccc",
-    fontFamily: "inherit",
-    fontWeight: 400,
-  },
-  primary: {
-    padding: "10px 14px",
-    borderRadius: 6,
-    border: "none",
-    background: "#0A84FF",
-    color: "#fff",
-    cursor: "pointer",
-    fontWeight: 600,
-    alignSelf: "flex-start",
-  },
-  ok: { color: "#1a7f37", fontSize: 14 },
-  error: { padding: 12, color: "#c00", background: "#fff5f5", borderRadius: 8 },
-};
