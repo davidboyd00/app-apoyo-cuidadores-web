@@ -3,10 +3,12 @@ import { Link, Navigate } from "react-router-dom";
 
 import { AuthLayout } from "../components/auth-layout";
 import { FormField } from "../components/form-field";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import { useAuth } from "../providers/auth-provider";
 import { mensajeAuth, validarEmail } from "../utils/auth-errores";
 
 export default function SignInPage() {
+  useTituloPagina("Entrar");
   const { session, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

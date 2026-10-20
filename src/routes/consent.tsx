@@ -3,10 +3,12 @@ import { Link } from "react-router-dom";
 
 import { AuthLayout } from "../components/auth-layout";
 import { useAcceptConsent, useConsent } from "../hooks/use-api";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/auth.module.css";
 
 export default function ConsentPage() {
+  useTituloPagina("Política de privacidad");
   const { data, isLoading, error } = useConsent();
   const aceptar = useAcceptConsent();
   const { signOut } = useAuth();

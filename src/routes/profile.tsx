@@ -3,11 +3,13 @@ import { useState, type FormEvent } from "react";
 import { AppShell } from "../components/app-shell";
 import { FormField } from "../components/form-field";
 import { useProfile, useUpdateProfile } from "../hooks/use-api";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
 import { useAuth } from "../providers/auth-provider";
 import s from "../styles/members.module.css";
 
 export default function ProfilePage() {
+  useTituloPagina("Mi perfil");
   const perfil = useProfile();
 
   return (

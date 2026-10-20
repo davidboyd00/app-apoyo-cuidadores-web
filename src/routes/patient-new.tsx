@@ -4,9 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../components/app-shell";
 import { FormField } from "../components/form-field";
 import { useCreatePatient } from "../hooks/use-api";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import s from "../styles/patients.module.css";
 
 export default function PatientNewPage() {
+  useTituloPagina("Agregar persona");
   const navigate = useNavigate();
   const crear = useCreatePatient();
 

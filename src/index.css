@@ -13,7 +13,7 @@
   --text-muted: #5d6669;
   --border: #e3ded7;
   /* Bordes de campos: ≥3:1 contra el fondo (WCAG 1.4.11). */
-  --border-input: #8c9294;
+  --border-input: #858b8d;
 
   /* Marca: petróleo apagado (primario) + terracota (solo acción principal) */
   --primary: #2f6b73;
@@ -27,7 +27,7 @@
   /* Estados */
   --danger: #b42318;
   --danger-soft: #fdecea;
-  --success: #2e7d4f;
+  --success: #2a7348;
   --success-soft: #e6f4ec;
   --warning: #7a5600;
   --warning-soft: #fbf1d9;

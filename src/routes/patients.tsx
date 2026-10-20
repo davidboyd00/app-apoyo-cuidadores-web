@@ -4,11 +4,13 @@ import { AppShell } from "../components/app-shell";
 import { KindChip } from "../components/kind-chip";
 import { SlowHint } from "../components/slow-hint";
 import { usePatientEntries, usePatients } from "../hooks/use-api";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
 import s from "../styles/patients.module.css";
 import { edad, fechaCompleta, tiempoRelativo } from "../utils/bitacora";
 
 export default function PatientsPage() {
+  useTituloPagina("Personas que cuidas");
   const { data: pacientes, isLoading, error } = usePatients();
   const hayPacientes = !!pacientes && pacientes.length > 0;
 

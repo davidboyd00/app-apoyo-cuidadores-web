@@ -16,6 +16,7 @@ import {
   useRelevo,
   useUpdateEntry,
 } from "../hooks/use-api";
+import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/auth-provider";
@@ -49,6 +50,7 @@ export default function PatientDetailPage() {
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [errorPorEntrada, setErrorPorEntrada] = useState<Record<string, string>>({});
   const qc = useQueryClient();
+  useTituloPagina(paciente.data?.nombre);
 
   // Realtime: cuando otro familiar registra una entrada, refrescamos el feed.
   // RLS (entries_select) también filtra los eventos que llegan por Realtime.
