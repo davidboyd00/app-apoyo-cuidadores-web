@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { EntryForm, type EntryValues } from "../components/entry-form";
+import { MembersPanel } from "../components/members-panel";
 import {
   useDeleteEntry,
   useMembers,
@@ -181,6 +182,11 @@ export default function PatientDetailPage() {
             );
           })}
         </ul>
+      </section>
+
+      <section style={styles.section}>
+        <h2>Red de cuidado</h2>
+        {id && <MembersPanel patientId={id} />}
       </section>
     </main>
   );
