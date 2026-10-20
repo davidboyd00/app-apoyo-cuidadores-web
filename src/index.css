@@ -399,6 +399,52 @@ textarea.input {
   font-size: var(--fs-sm);
 }
 
+/* Chip de tipo de entrada: color por data-kind (ver --kind-*). */
+.kind-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kind-chip[data-kind="nota"] {
+  background: var(--kind-nota-bg);
+  color: var(--kind-nota-fg);
+}
+
+.kind-chip[data-kind="sintoma"] {
+  background: var(--kind-sintoma-bg);
+  color: var(--kind-sintoma-fg);
+}
+
+.kind-chip[data-kind="animo"] {
+  background: var(--kind-animo-bg);
+  color: var(--kind-animo-fg);
+}
+
+.kind-chip[data-kind="medicamento"] {
+  background: var(--kind-medicamento-bg);
+  color: var(--kind-medicamento-fg);
+}
+
+.kind-chip[data-kind="alimentacion"] {
+  background: var(--kind-alimentacion-bg);
+  color: var(--kind-alimentacion-fg);
+}
+
+.kind-chip[data-kind="ejercicio"] {
+  background: var(--kind-ejercicio-bg);
+  color: var(--kind-ejercicio-fg);
+}
+
+.kind-chip[data-kind="otro"] {
+  background: var(--kind-otro-bg);
+  color: var(--kind-otro-fg);
+}
+
 .muted {
   color: var(--text-muted);
 }
