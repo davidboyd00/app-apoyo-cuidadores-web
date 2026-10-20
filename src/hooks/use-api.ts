@@ -116,7 +116,9 @@ export function useUpdateEntry(patientId: string | undefined) {
         `/patients/${patientId}/entries/${entryId}`,
         cambios
       ),
-    onSuccess: () => {
+    // onSettled (no solo onSuccess): si RLS responde 404 porque la entrada
+    // ya no existe, el feed se refresca y deja de mostrarla.
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
     },
   });
@@ -127,7 +129,7 @@ export function useDeleteEntry(patientId: string | undefined) {
   return useMutation({
     mutationFn: (entryId: string) =>
       api.delete<void>(`/patients/${patientId}/entries/${entryId}`),
-    onSuccess: () => {
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
     },
   });
