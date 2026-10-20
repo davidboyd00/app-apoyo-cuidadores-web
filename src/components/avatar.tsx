@@ -9,11 +9,26 @@ function tono(clave: string): number {
   return Math.abs(h) % TONOS;
 }
 
-/** Avatar circular con iniciales; decorativo (el nombre va al lado). */
-export function Avatar({ nombre, clave }: { nombre: string; clave: string }) {
+/**
+ * Avatar circular con iniciales; decorativo (el nombre va al lado).
+ * `desconocido`: autor que ya no está en la red → avatar neutro con "?".
+ */
+export function Avatar({
+  nombre,
+  clave,
+  desconocido = false,
+}: {
+  nombre: string;
+  clave: string;
+  desconocido?: boolean;
+}) {
   return (
-    <span className="avatar" data-tono={tono(clave)} aria-hidden="true">
-      {iniciales(nombre)}
+    <span
+      className="avatar"
+      data-tono={desconocido ? "neutro" : tono(clave)}
+      aria-hidden="true"
+    >
+      {desconocido ? "?" : iniciales(nombre)}
     </span>
   );
 }

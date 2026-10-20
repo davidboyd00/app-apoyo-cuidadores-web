@@ -86,6 +86,20 @@ export default function PatientDetailPage() {
     return map;
   }, [miembros.data]);
 
+  // Etiqueta del autor (KPI de relevo: siempre visible quién escribió).
+  // - "Tú" para las propias.
+  // - Mientras cargan los miembros: sin etiqueta (placeholder), para no
+  //   mostrar un "desconocido" que después cambia.
+  // - Autor que ya no está en list_care_members: fue removido de la red.
+  function autorDe(authorId: string, esMia: boolean) {
+    const nombre = autorPorId[authorId] ?? null;
+    if (esMia) return { nombre: nombre ?? "Tú", etiqueta: "Tú" };
+    if (nombre) return { nombre, etiqueta: nombre };
+    if (miembros.isLoading) return { nombre: null, etiqueta: null };
+    if (miembros.error) return { nombre: null, etiqueta: "Autor no disponible" };
+    return { nombre: null, etiqueta: "Ex integrante de la red" };
+  }
+
   // Solo se envían los campos que cambiaron; si no cambió nada, se cierra.
   async function guardarEdicion(entrada: Schemas["Entry"], valores: EntryValues) {
     const cambios: Schemas["EntryUpdate"] = {};
@@ -213,10 +227,14 @@ export default function PatientDetailPage() {
             {entradas.data.map((e) => {
               // Mostrar botones solo al autor es UX; quien autoriza es RLS.
               const esMia = e.author_id === session?.user.id;
-              const autor = autorPorId[e.author_id] ?? "Autor desconocido";
+              const autor = autorDe(e.author_id, esMia);
               return (
                 <li key={e.id} className={s.entry}>
-                  <Avatar nombre={autor} clave={e.author_id} />
+                  <Avatar
+                    nombre={autor.nombre ?? ""}
+                    clave={e.author_id}
+                    desconocido={!autor.nombre && !miembros.isLoading}
+                  />
                   {editandoId === e.id && id ? (
                     <div className={s.entryEdit}>
                       <EntryForm
@@ -229,7 +247,14 @@ export default function PatientDetailPage() {
                   ) : (
                     <article className={`card ${s.entryCard}`}>
                       <div className={s.entryHead}>
-                        <strong>{esMia ? `${autor} (tú)` : autor}</strong>
+                        {autor.etiqueta ? (
+                          <strong>{autor.etiqueta}</strong>
+                        ) : (
+                          <>
+                            <span className={`skeleton ${s.nameSkeleton}`} aria-hidden="true" />
+                            <span className="visually-hidden">Cargando autor</span>
+                          </>
+                        )}
                         <time
                           className={s.entryTime}
                           dateTime={e.occurred_at}

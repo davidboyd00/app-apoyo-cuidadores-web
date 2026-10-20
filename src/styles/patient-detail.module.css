@@ -217,3 +217,9 @@
   flex: 1;
   min-width: 0;
 }
+
+.nameSkeleton {
+  display: inline-block;
+  width: 120px;
+  height: 1em;
+}

@@ -491,6 +491,11 @@ textarea.input {
   color: var(--kind-alimentacion-fg);
 }
 
+.avatar[data-tono="neutro"] {
+  background: var(--kind-nota-bg);
+  color: var(--kind-nota-fg);
+}
+
 .avatar[data-tono="4"] {
   background: var(--kind-sintoma-bg);
   color: var(--kind-sintoma-fg);
