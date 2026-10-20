@@ -223,3 +223,8 @@
   width: 120px;
   height: 1em;
 }
+
+/* Región aria-live siempre presente; vacía no suma el gap del .stack. */
+.avisoEnVivo:empty {
+  margin-top: -16px;
+}

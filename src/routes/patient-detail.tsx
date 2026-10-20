@@ -52,25 +52,31 @@ export default function PatientDetailPage() {
   const qc = useQueryClient();
   useTituloPagina(paciente.data?.nombre);
 
-  // Realtime: cuando otro familiar registra una entrada, refrescamos el feed.
-  // RLS (entries_select) también filtra los eventos que llegan por Realtime.
+  const [enVivoCaido, setEnVivoCaido] = useState(false);
+
+  // Realtime: cuando otro familiar registra o edita una entrada, refrescamos
+  // el feed. RLS (entries_select) también filtra los eventos que llegan.
+  // DELETE no se escucha a propósito: Supabase no aplica filtros ni RLS a
+  // los eventos DELETE (llegarían ids de otros pacientes); los borrados se
+  // ven al refrescar (foco de la pestaña, staleTime o la próxima acción).
   useEffect(() => {
     if (!id) return;
+    const filtro = {
+      schema: "public",
+      table: "log_entries",
+      filter: `patient_id=eq.${id}`,
+    };
+    const refrescar = () => {
+      void qc.invalidateQueries({ queryKey: ["patients", id, "entries"] });
+    };
     const canal = supabase
       .channel(`bitacora:${id}:${++contadorCanales}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "log_entries",
-          filter: `patient_id=eq.${id}`,
-        },
-        () => {
-          void qc.invalidateQueries({ queryKey: ["patients", id, "entries"] });
-        }
-      )
-      .subscribe();
+      .on("postgres_changes", { event: "INSERT", ...filtro }, refrescar)
+      .on("postgres_changes", { event: "UPDATE", ...filtro }, refrescar)
+      .subscribe((estado) => {
+        if (estado === "SUBSCRIBED") setEnVivoCaido(false);
+        if (estado === "CHANNEL_ERROR" || estado === "TIMED_OUT") setEnVivoCaido(true);
+      });
     return () => {
       void supabase.removeChannel(canal);
     };
@@ -179,6 +185,10 @@ export default function PatientDetailPage() {
 
       <section id="bitacora" className={`stack ${s.section}`} aria-labelledby="titulo-bitacora">
         <h2 id="titulo-bitacora">Bitácora</h2>
+        <p className={`muted small ${s.avisoEnVivo}`} aria-live="polite">
+          {enVivoCaido &&
+            "Las actualizaciones en vivo no están disponibles ahora; la bitácora se refresca al volver a esta pestaña."}
+        </p>
         {id && <EntryForm patientId={id} />}
 
         <div className="row-between">
