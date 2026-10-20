@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { AppHeader } from "../components/app-header";
@@ -13,6 +14,7 @@ import {
   useUpdateEntry,
 } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
+import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/auth-provider";
 
 type Kind = Schemas["EntryCreate"]["kind"];
@@ -27,6 +29,12 @@ const KIND_LABELS: Record<Kind, string> = {
   otro: "Otro",
 };
 
+// supabase-js reutiliza un canal con el mismo nombre y removeChannel es
+// async: con StrictMode (montar → desmontar → montar) el segundo `.on()`
+// caería sobre el canal ya suscrito y lanzaría. Un sufijo por suscripción
+// lo evita.
+let contadorCanales = 0;
+
 export default function PatientDetailPage() {
   const { id } = useParams();
   const paciente = usePatient(id);
@@ -40,6 +48,31 @@ export default function PatientDetailPage() {
   const borrar = useDeleteEntry(id);
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [errorPorEntrada, setErrorPorEntrada] = useState<Record<string, string>>({});
+  const qc = useQueryClient();
+
+  // Realtime: cuando otro familiar registra una entrada, refrescamos el feed.
+  // RLS (entries_select) también filtra los eventos que llegan por Realtime.
+  useEffect(() => {
+    if (!id) return;
+    const canal = supabase
+      .channel(`bitacora:${id}:${++contadorCanales}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "log_entries",
+          filter: `patient_id=eq.${id}`,
+        },
+        () => {
+          void qc.invalidateQueries({ queryKey: ["patients", id, "entries"] });
+        }
+      )
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(canal);
+    };
+  }, [id, qc]);
 
   // Mapa author_id → nombre|email para rotular la autoría de cada entrada.
   // Base del KPI de relevo familiar: hace visible quién escribió qué.
