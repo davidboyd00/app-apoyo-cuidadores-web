@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 
-import { AppHeader } from "../components/app-header";
+import { AppShell } from "../components/app-shell";
 import { useProfile, useUpdateProfile } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
 
@@ -8,8 +8,7 @@ export default function ProfilePage() {
   const perfil = useProfile();
 
   return (
-    <main className="container page stack">
-      <AppHeader />
+    <AppShell>
       <h1>Mi perfil</h1>
       <p className="muted">
         Tu nombre es lo que ve tu red de cuidado en la bitácora.
@@ -22,7 +21,7 @@ export default function ProfilePage() {
         </p>
       )}
       {perfil.data && <ProfileForm key={perfil.data.id} perfil={perfil.data} />}
-    </main>
+    </AppShell>
   );
 }
 

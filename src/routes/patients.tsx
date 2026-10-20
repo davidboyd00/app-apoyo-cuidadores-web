@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-import { AppHeader } from "../components/app-header";
+import { AppShell } from "../components/app-shell";
 import { SlowHint } from "../components/slow-hint";
 import { usePatients } from "../hooks/use-api";
 
@@ -8,8 +8,7 @@ export default function PatientsPage() {
   const { data: pacientes, isLoading, error } = usePatients();
 
   return (
-    <main className="container page stack">
-      <AppHeader />
+    <AppShell>
       <div className="row-between">
         <h1>Pacientes</h1>
         <Link to="/patients/new" className="btn btn-primary">
@@ -52,7 +51,7 @@ export default function PatientsPage() {
           </li>
         ))}
       </ul>
-    </main>
+    </AppShell>
   );
 }
 

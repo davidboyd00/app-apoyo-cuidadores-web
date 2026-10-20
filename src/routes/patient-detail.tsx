@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { AppHeader } from "../components/app-header";
+import { AppShell } from "../components/app-shell";
 import { EntryForm, type EntryValues } from "../components/entry-form";
 import { MembersPanel } from "../components/members-panel";
 import { SlowHint } from "../components/slow-hint";
@@ -115,25 +115,24 @@ export default function PatientDetailPage() {
 
   if (paciente.isLoading) {
     return (
-      <main className="container page" aria-busy="true">
-        <p className="muted">Cargando…</p>
+      <AppShell>
+        <p className="muted" aria-busy="true">Cargando…</p>
         <SlowHint />
-      </main>
+      </AppShell>
     );
   }
   if (paciente.error || !paciente.data) {
     return (
-      <main className="container page">
+      <AppShell>
         <p className="alert" role="alert">
           {paciente.error instanceof Error ? paciente.error.message : "Error"}
         </p>
-      </main>
+      </AppShell>
     );
   }
 
   return (
-    <main className="container page stack">
-      <AppHeader />
+    <AppShell>
       <nav>
         <Link to="/">← Pacientes</Link>
       </nav>
@@ -238,7 +237,7 @@ export default function PatientDetailPage() {
         <h2>Red de cuidado</h2>
         {id && <MembersPanel patientId={id} />}
       </section>
-    </main>
+    </AppShell>
   );
 }
 

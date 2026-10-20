@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useSearchParams } from "react-router-dom";
 
 import { useConsent } from "../hooks/use-api";
 import { SlowHint } from "./slow-hint";
@@ -12,6 +12,7 @@ import { SlowHint } from "./slow-hint";
 export function ConsentGate({ children }: { children: ReactNode }) {
   const { data, isLoading, error } = useConsent();
   const location = useLocation();
+  const [params] = useSearchParams();
 
   if (isLoading) {
     return (
@@ -34,11 +35,13 @@ export function ConsentGate({ children }: { children: ReactNode }) {
 
   const yaAceptada = data?.aceptada_en !== null && data?.aceptada_en !== undefined;
   const enConsent = location.pathname === "/consent";
+  // `/consent?ver=1` (link del footer) permite releer la política ya aceptada.
+  const releyendo = params.get("ver") === "1";
 
   if (!yaAceptada && !enConsent) {
     return <Navigate to="/consent" replace />;
   }
-  if (yaAceptada && enConsent) {
+  if (yaAceptada && enConsent && !releyendo) {
     return <Navigate to="/" replace />;
   }
   return <>{children}</>;

@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
+import { AppShell } from "../components/app-shell";
 import { useCreatePatient } from "../hooks/use-api";
 
 export default function PatientNewPage() {
@@ -23,7 +24,7 @@ export default function PatientNewPage() {
   }
 
   return (
-    <main className="container page stack">
+    <AppShell>
       <nav>
         <Link to="/">← Volver a pacientes</Link>
       </nav>
@@ -78,7 +79,7 @@ export default function PatientNewPage() {
           {crear.isPending ? "Guardando…" : "Crear paciente"}
         </button>
       </form>
-    </main>
+    </AppShell>
   );
 }
 

@@ -1,0 +1,151 @@
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.skipLink {
+  position: absolute;
+  left: 16px;
+  top: -100px;
+  z-index: 20;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-weight: 600;
+}
+
+.skipLink:focus {
+  top: 12px;
+}
+
+/* --- Header ---------------------------------------------------------------- */
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.headerInner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding-block: 10px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-h);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.brandMark {
+  color: var(--primary);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.navLinkActive {
+  background: var(--primary-soft);
+}
+
+.switcher {
+  position: relative;
+  order: 3;
+  flex-basis: 100%;
+}
+
+.switcherSelect {
+  max-width: 280px;
+}
+
+.switcherButton {
+  justify-content: space-between;
+  width: 100%;
+}
+
+.switcherMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 15;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.switcherOption {
+  width: 100%;
+  justify-content: flex-start;
+  border: none;
+  font-weight: 400;
+}
+
+.switcherOption[aria-current="true"] {
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.longLabel {
+  display: none;
+}
+
+/* En móvil: botón + menú; en pantallas anchas: <select> nativo en línea. */
+.desktopOnly {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .switcher {
+    order: 0;
+    flex-basis: auto;
+  }
+
+  .mobileOnly {
+    display: none;
+  }
+
+  .desktopOnly {
+    display: block;
+  }
+
+  .longLabel {
+    display: inline;
+  }
+
+  .shortLabel {
+    display: none;
+  }
+}
+
+/* --- Contenido y footer ----------------------------------------------------- */
+
+.main {
+  flex: 1;
+}
+
+.footer {
+  border-top: 1px solid var(--border);
+  padding-block: 20px;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+}

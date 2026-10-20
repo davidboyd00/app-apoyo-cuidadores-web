@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { useAcceptConsent, useConsent } from "../hooks/use-api";
 import { useAuth } from "../providers/auth-provider";
 
@@ -43,6 +45,18 @@ export default function ConsentPage() {
         </p>
       )}
 
+      {data.aceptada_en ? (
+        // Relectura desde el footer: ya aceptada, sin botones de aceptar.
+        <div className="row-between">
+          <p className="muted">
+            Aceptaste esta versión el{" "}
+            {new Date(data.aceptada_en).toLocaleDateString("es-CL")}.
+          </p>
+          <Link to="/" className="btn">
+            Volver al inicio
+          </Link>
+        </div>
+      ) : (
       <div className="row">
         <button onClick={() => signOut()} className="btn">
           No acepto, salir
@@ -55,6 +69,7 @@ export default function ConsentPage() {
           {aceptar.isPending ? "Guardando…" : "Acepto la política"}
         </button>
       </div>
+      )}
     </main>
   );
 }
