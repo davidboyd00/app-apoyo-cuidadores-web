@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { AppHeader } from "../components/app-header";
 import { EntryForm, type EntryValues } from "../components/entry-form";
 import { MembersPanel } from "../components/members-panel";
+import { SlowHint } from "../components/slow-hint";
 import {
   useDeleteEntry,
   useMembers,
@@ -79,7 +80,14 @@ export default function PatientDetailPage() {
     }
   }
 
-  if (paciente.isLoading) return <div style={{ padding: 24 }}>Cargando…</div>;
+  if (paciente.isLoading) {
+    return (
+      <div style={{ padding: 24 }}>
+        Cargando…
+        <SlowHint />
+      </div>
+    );
+  }
   if (paciente.error || !paciente.data) {
     return (
       <div style={{ padding: 24, color: "#c00" }}>
@@ -126,7 +134,12 @@ export default function PatientDetailPage() {
           </select>
         </div>
 
-        {entradas.isLoading && <p>Cargando bitácora…</p>}
+        {entradas.isLoading && (
+          <>
+            <p>Cargando bitácora…</p>
+            <SlowHint />
+          </>
+        )}
         {entradas.error && (
           <p style={styles.error}>
             {entradas.error instanceof Error ? entradas.error.message : "Error"}

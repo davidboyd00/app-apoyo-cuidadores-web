@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { AppHeader } from "../components/app-header";
+import { SlowHint } from "../components/slow-hint";
 import { usePatients } from "../hooks/use-api";
 
 export default function PatientsPage() {
@@ -16,7 +17,12 @@ export default function PatientsPage() {
         </Link>
       </div>
 
-      {isLoading && <p>Cargando…</p>}
+      {isLoading && (
+        <>
+          <p>Cargando…</p>
+          <SlowHint />
+        </>
+      )}
       {error && (
         <div style={styles.error}>
           {error instanceof Error ? error.message : "Error"}

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 
 import { useConsent } from "../hooks/use-api";
+import { SlowHint } from "./slow-hint";
 
 /**
  * Ley 21.719: bloquea el acceso a cualquier endpoint de negocio hasta que
@@ -12,7 +13,14 @@ export function ConsentGate({ children }: { children: ReactNode }) {
   const { data, isLoading, error } = useConsent();
   const location = useLocation();
 
-  if (isLoading) return <div style={{ padding: 24 }}>Cargando política…</div>;
+  if (isLoading) {
+    return (
+      <div style={{ padding: 24 }}>
+        Cargando política…
+        <SlowHint />
+      </div>
+    );
+  }
 
   if (error) {
     return (
