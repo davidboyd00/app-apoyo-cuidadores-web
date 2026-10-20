@@ -1,20 +1,25 @@
 import { useState, type FormEvent } from "react";
 
 import { AppShell } from "../components/app-shell";
+import { FormField } from "../components/form-field";
 import { useProfile, useUpdateProfile } from "../hooks/use-api";
 import type { Schemas } from "../lib/api";
+import { useAuth } from "../providers/auth-provider";
+import s from "../styles/members.module.css";
 
 export default function ProfilePage() {
   const perfil = useProfile();
 
   return (
     <AppShell>
-      <h1>Mi perfil</h1>
-      <p className="muted">
-        Tu nombre es lo que ve tu red de cuidado en la bitácora.
-      </p>
+      <div className="stack-sm">
+        <h1>Mi perfil</h1>
+        <p className="muted">Tu nombre es lo que ve tu familia en la bitácora.</p>
+      </div>
 
-      {perfil.isLoading && <p>Cargando perfil…</p>}
+      {perfil.isLoading && (
+        <div className={`skeleton ${s.profileCard} ${s.skeletonRow}`} aria-busy="true" />
+      )}
       {perfil.error && (
         <p className="alert" role="alert">
           {perfil.error instanceof Error ? perfil.error.message : "Error"}
@@ -27,6 +32,7 @@ export default function ProfilePage() {
 
 function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
   const guardar = useUpdateProfile();
+  const { session } = useAuth();
   const [nombre, setNombre] = useState(perfil.nombre ?? "");
   const [telefono, setTelefono] = useState(perfil.telefono ?? "");
 
@@ -40,44 +46,60 @@ function ProfileForm({ perfil }: { perfil: Schemas["Profile"] }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="card stack">
-      <label className="field">
-        <span className="field-label">Nombre</span>
-        <input
-          value={nombre}
-          onChange={(e) => {
-            setNombre(e.target.value);
-            guardar.reset();
-          }}
-          placeholder="Ej: María Pérez"
-          className="input"
-        />
-      </label>
-      <label className="field">
-        <span className="field-label">Teléfono</span>
-        <input
-          type="tel"
-          value={telefono}
-          onChange={(e) => {
-            setTelefono(e.target.value);
-            guardar.reset();
-          }}
-          placeholder="+56 9 1234 5678"
-          className="input"
-        />
-      </label>
+    <form onSubmit={onSubmit} className={`card stack ${s.profileCard}`} noValidate>
+      <div className={s.readonly}>
+        <span className="field-label">Correo</span>
+        <span className="muted">{session?.user.email}</span>
+      </div>
+
+      <FormField label="Nombre" hint="Como te conoce tu familia.">
+        {(props) => (
+          <input
+            {...props}
+            value={nombre}
+            onChange={(e) => {
+              setNombre(e.target.value);
+              guardar.reset();
+            }}
+            placeholder="Ej: María Pérez"
+            autoComplete="name"
+            className="input"
+          />
+        )}
+      </FormField>
+
+      <FormField label="Teléfono (opcional)">
+        {(props) => (
+          <input
+            {...props}
+            type="tel"
+            value={telefono}
+            onChange={(e) => {
+              setTelefono(e.target.value);
+              guardar.reset();
+            }}
+            placeholder="+56 9 1234 5678"
+            autoComplete="tel"
+            className="input"
+          />
+        )}
+      </FormField>
 
       {guardar.isError && (
         <p className="alert" role="alert">
           {guardar.error instanceof Error ? guardar.error.message : "Error"}
         </p>
       )}
-      {guardar.isSuccess && <p className="alert alert-success">Guardado</p>}
 
-      <button type="submit" disabled={guardar.isPending} className="btn btn-primary">
-        {guardar.isPending ? "Guardando…" : "Guardar"}
-      </button>
+      <div className={s.status}>
+        <button type="submit" disabled={guardar.isPending} className="btn btn-primary">
+          {guardar.isPending ? "Guardando…" : "Guardar"}
+        </button>
+        {/* La región aria-live existe siempre; solo cambia su contenido. */}
+        <p aria-live="polite" className={guardar.isSuccess ? "badge badge-success" : undefined}>
+          {guardar.isSuccess && "Guardado ✓"}
+        </p>
+      </div>
     </form>
   );
 }
-
