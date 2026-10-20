@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { AppHeader } from "../components/app-header";
 import { EntryForm, type EntryValues } from "../components/entry-form";
 import { MembersPanel } from "../components/members-panel";
 import {
@@ -89,6 +90,7 @@ export default function PatientDetailPage() {
 
   return (
     <main style={styles.wrap}>
+      <AppHeader />
       <nav style={styles.breadcrumb}>
         <Link to="/">← Pacientes</Link>
       </nav>

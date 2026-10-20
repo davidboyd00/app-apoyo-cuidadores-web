@@ -1,28 +1,20 @@
 import { Link } from "react-router-dom";
 
+import { AppHeader } from "../components/app-header";
 import { usePatients } from "../hooks/use-api";
-import { useAuth } from "../providers/auth-provider";
 
 export default function PatientsPage() {
   const { data: pacientes, isLoading, error } = usePatients();
-  const { session, signOut } = useAuth();
 
   return (
     <main style={styles.wrap}>
-      <header style={styles.header}>
-        <div>
-          <h1 style={{ margin: 0 }}>Pacientes</h1>
-          <p style={styles.muted}>{session?.user?.email}</p>
-        </div>
-        <div style={styles.headerActions}>
-          <Link to="/patients/new" style={styles.primaryLink}>
-            + Nuevo paciente
-          </Link>
-          <button onClick={() => signOut()} style={styles.secondary}>
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
+      <AppHeader />
+      <div style={styles.header}>
+        <h1 style={{ margin: 0 }}>Pacientes</h1>
+        <Link to="/patients/new" style={styles.primaryLink}>
+          + Nuevo paciente
+        </Link>
+      </div>
 
       {isLoading && <p>Cargando…</p>}
       {error && (
@@ -63,12 +55,11 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 16,
     flexWrap: "wrap",
     marginBottom: 20,
   },
-  headerActions: { display: "flex", gap: 8, alignItems: "center" },
   muted: { color: "#666", margin: 0 },
   primaryLink: {
     padding: "10px 14px",
@@ -77,13 +68,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#fff",
     textDecoration: "none",
     fontWeight: 600,
-  },
-  secondary: {
-    padding: "10px 14px",
-    borderRadius: 8,
-    border: "1px solid #ccc",
-    background: "#fff",
-    cursor: "pointer",
   },
   list: { listStyle: "none", padding: 0, display: "flex", flexDirection: "column", gap: 8 },
   item: {

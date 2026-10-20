@@ -8,6 +8,7 @@ import ConsentPage from "./routes/consent";
 import PatientDetailPage from "./routes/patient-detail";
 import PatientNewPage from "./routes/patient-new";
 import PatientsPage from "./routes/patients";
+import ProfilePage from "./routes/profile";
 import SignInPage from "./routes/sign-in";
 import SignUpPage from "./routes/sign-up";
 
@@ -37,6 +38,7 @@ export default function App() {
               <Route path="/" element={<PatientsPage />} />
               <Route path="/patients/new" element={<PatientNewPage />} />
               <Route path="/patients/:id" element={<PatientDetailPage />} />
+              <Route path="/me" element={<ProfilePage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
