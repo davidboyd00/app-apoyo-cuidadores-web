@@ -1,0 +1,179 @@
+/* Estilos compartidos de las secciones de la ficha (turnos, medicamentos,
+   asistente, resúmenes), de centros y del perfil. Mobile-first. */
+
+.intro {
+  max-width: 62ch;
+}
+
+.grid2 {
+  display: grid;
+  gap: 16px;
+}
+
+@media (min-width: 760px) {
+  .grid2 {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 14px 16px;
+}
+
+.itemPrincipal {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.itemTitulo {
+  font-weight: 700;
+}
+
+/* Hijo de un .item que ocupa toda la fila (detalle desplegado, errores). */
+.anchoCompleto {
+  flex-basis: 100%;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.destacado {
+  border-left: 4px solid var(--primary);
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--surface) 65%);
+}
+
+.cifra {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.campos {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 560px) {
+  .campos3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .campos2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.horarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.horarioInput {
+  width: 160px;
+}
+
+.sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sugerencia {
+  min-height: 40px;
+  font-size: var(--fs-sm);
+}
+
+.respuesta {
+  white-space: pre-wrap;
+  font-size: var(--fs-base);
+  line-height: 1.55;
+}
+
+.citas {
+  margin-top: 4px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.cita {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.cita:last-child {
+  border-bottom: 0;
+}
+
+.resumenTexto {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+.nota {
+  white-space: pre-wrap;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+}
+
+.zonaPeligro {
+  border-color: #e7b3b3;
+}
+
+.filtros {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .filtros {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+}
+
+/* --- Vista de impresión del resumen médico --- */
+.documento {
+  max-width: 760px;
+  background: var(--surface);
+}
+
+.documentoCabecera {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 16px;
+  border-bottom: 2px solid var(--text);
+  padding-bottom: 12px;
+}
+
+@media print {
+  .noImprimir {
+    display: none !important;
+  }
+  .documento {
+    max-width: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+}

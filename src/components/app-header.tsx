@@ -94,6 +94,14 @@ export function AppHeader() {
 
         <nav className={s.nav} aria-label="Cuenta">
           <NavLink
+            to="/centros"
+            className={({ isActive }) =>
+              `btn btn-ghost ${isActive ? s.navLinkActive : ""}`
+            }
+          >
+            Centros
+          </NavLink>
+          <NavLink
             to="/me"
             className={({ isActive }) =>
               `btn btn-ghost ${isActive ? s.navLinkActive : ""}`

@@ -1,24 +1,46 @@
 import type { Schemas } from "./api";
 
-// Cola offline de la bitácora. Vive en este navegador: cada registro se guarda
+// Cola offline (bitácora y dosis). Vive en este navegador: cada registro se guarda
 // con un `client_id` (idempotencia en el backend) y su `registrado_en` (hora del
 // dispositivo) para que el servidor lo acepte aunque llegue tarde.
 //
 // Nota de privacidad: el contenido clínico queda en localStorage del dispositivo
 // mientras está pendiente. Se borra al sincronizar o al descartarlo.
 
-export type Pendiente = {
+type Base = {
   client_id: string;
   patient_id: string;
-  kind: Schemas["EntryCreate"]["kind"];
-  content: string;
-  occurred_at: string;
   registrado_en: string;
-  source: "text";
   // Error no recuperable que devolvió el servidor (p. ej. validación). Un
   // pendiente con error no se reintenta solo: lo ve el usuario y decide.
   error?: string;
 };
+
+// Entrada de bitácora. `tipo` falta en los pendientes guardados antes de que
+// la cola aceptara dosis: se tratan como entradas.
+export type PendienteEntrada = Base & {
+  tipo?: "entrada";
+  kind: Schemas["EntryCreate"]["kind"];
+  content: string;
+  occurred_at: string;
+  source: "text" | "voice";
+};
+
+// Dosis de medicamento (la solicitud de cambio offline incluye fármacos).
+export type PendienteDosis = Base & {
+  tipo: "dosis";
+  medication_id: string;
+  medicamento: string; // solo para mostrarlo mientras está pendiente
+  scheduled_for: string;
+  taken_at: string | null;
+  status: Schemas["MedicationDoseCreate"]["status"];
+};
+
+export type Pendiente = PendienteEntrada | PendienteDosis;
+
+export function esDosis(p: Pendiente): p is PendienteDosis {
+  return p.tipo === "dosis";
+}
 
 const CLAVE = "cuidadores:outbox:v1";
 let cache: Pendiente[] | null = null;
@@ -78,4 +100,14 @@ if (typeof window !== "undefined") {
     cache = null;
     oyentes.forEach((f) => f());
   });
+}
+
+/** Borra la cola de este navegador (al eliminar la cuenta: no dejar datos clínicos). */
+export function vaciarOutbox() {
+  escribir([]);
+  try {
+    localStorage.removeItem(CLAVE);
+  } catch {
+    // sin storage: ya quedó vacía en memoria
+  }
 }

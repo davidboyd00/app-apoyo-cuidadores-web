@@ -47,14 +47,33 @@ notificaciones de medicamentos, ARCO export/delete.
 
 ---
 
+## Entrega final — 24/11
+
+- [x] Solicitudes de cambio: historial inmutable (revisiones y anulación con
+      motivo + historial visible) y offline-first (cola local para entradas y
+      dosis, indicador de sincronización).
+- [x] Asistente IA con citas verificables y KPI de respuestas verificables.
+- [x] Resúmenes médicos asíncronos e imprimibles (PDF desde el navegador).
+- [x] Turnos de cuidado y relevo.
+- [x] Medicamentos: próximas dosis, registro (también offline) y adherencia.
+- [x] Dictado por voz en el navegador con sugerencia de tipo.
+- [x] ARCO completo: descarga de datos y eliminación de cuenta.
+- [x] Centros y farmacias.
+- [x] Rediseño visual para familias; responsive (grilla de secciones en celular).
+- [x] Deuda técnica de la bitácora: hora relativa que se actualiza, fechas
+      futuras con fecha completa, comparación sin espacios al editar y
+      borrador por persona (sessionStorage). Los borrados ya no comparten
+      estado (anulación con formulario por entrada).
+- [x] Prueba de punta a punta contra el backend real (`e2e/flujo_real.py`).
+- [ ] Aplicar migraciones en Supabase y variables en Render (ver
+      `docs/DESPLIEGUE.md` del backend).
+- [ ] Piloto con cuidadores (`docs/PILOTO_SUS.md`) y video (`docs/GUION_VIDEO_DEMO.md`).
+
 ## Fuera de alcance (v2)
 
-- Asistente IA con citaciones.
-- Resúmenes médicos.
-- Notificaciones de medicamentos (meds doses está en el backend).
-- ARCO completo (export + delete). Solo gate de consentimiento.
-- Realtime en la bitácora (si da tiempo el día 4, se agrega).
-- Mapa de centros/farmacias.
+- Notificaciones push de medicamentos (la web muestra las próximas dosis).
+- Mapa de centros/farmacias (hoy: lista con "Cómo llegar").
+- Cifrado de la cola offline en el dispositivo.
 
 ## Deuda técnica bitácora
 

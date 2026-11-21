@@ -136,7 +136,7 @@ export function useRevisarEntry(patientId: string | undefined) {
       entryId: string;
       cambios: Schemas["EntryRevisionEditar"];
     }) =>
-      api.post<Schemas["EntryRevision"]>(
+      api.post<Schemas["Entry"]>(
         `/patients/${patientId}/entries/${entryId}/revisiones`,
         cambios
       ),
@@ -150,7 +150,7 @@ export function useAnularEntry(patientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ entryId, motivo }: { entryId: string; motivo: string }) =>
-      api.post<Schemas["EntryRevision"]>(
+      api.post<Schemas["Entry"]>(
         `/patients/${patientId}/entries/${entryId}/anulacion`,
         { motivo }
       ),
@@ -205,5 +205,217 @@ export function useRemoveMember(patientId: string | undefined) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId, "members"] });
     },
+  });
+}
+
+// --- Historial de una entrada (original + correcciones) ----------------------
+
+export function useHistorialEntrada(patientId: string | undefined, entryId: string, activo: boolean) {
+  return useQuery({
+    enabled: !!patientId && activo,
+    queryKey: ["patients", patientId, "entries", "historial", entryId],
+    queryFn: () =>
+      api.get<Schemas["EntryHistorial"]>(`/patients/${patientId}/entries/${entryId}/historial`),
+  });
+}
+
+/** Entradas vigentes desde `desde` (hasta 200). Para el resumen de un turno
+ * y para mostrar las entradas que citó el asistente. */
+export function useEntradasDesde(patientId: string | undefined, desde: string | undefined) {
+  return useQuery({
+    enabled: !!patientId && !!desde,
+    queryKey: ["patients", patientId, "entries", "desde", desde],
+    queryFn: () => {
+      const qs = new URLSearchParams({ limit: "200", desde: desde ?? "" });
+      return api.get<Schemas["Entry"][]>(`/patients/${patientId}/entries?${qs}`);
+    },
+  });
+}
+
+// --- Turnos de cuidado (relevo) ----------------------------------------------
+
+export function useTurnos(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "turnos"],
+    queryFn: () => api.get<Schemas["Turno"][]>(`/patients/${patientId}/turnos`),
+    refetchInterval: 60_000, // "de turno ahora" cambia con la hora
+  });
+}
+
+export function useCrearTurno(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Schemas["TurnoCreate"]) =>
+      api.post<Schemas["Turno"]>(`/patients/${patientId}/turnos`, payload),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "turnos"] }),
+  });
+}
+
+export function useEliminarTurno(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (turnoId: string) => api.delete<void>(`/patients/${patientId}/turnos/${turnoId}`),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "turnos"] }),
+  });
+}
+
+// --- Medicamentos y dosis ----------------------------------------------------
+
+export function useMedicamentos(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "medications"],
+    queryFn: () => api.get<Schemas["Medication"][]>(`/patients/${patientId}/medications`),
+  });
+}
+
+export function useCrearMedicamento(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Schemas["MedicationCreate"]) =>
+      api.post<Schemas["Medication"]>(`/patients/${patientId}/medications`, payload),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "medications"] }),
+  });
+}
+
+export function useDesactivarMedicamento(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (medicationId: string) =>
+      api.post<Schemas["Medication"]>(
+        `/patients/${patientId}/medications/${medicationId}/desactivar`
+      ),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "medications"] }),
+  });
+}
+
+export function useProximasDosis(patientId: string | undefined, horas = 24) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "medications", "upcoming", horas],
+    queryFn: () =>
+      api.get<Schemas["UpcomingDose"][]>(
+        `/patients/${patientId}/medications/upcoming?within_hours=${horas}`
+      ),
+    refetchInterval: 5 * 60_000,
+  });
+}
+
+export function useAdherencia(patientId: string | undefined, dias = 7) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "medications", "adherence", dias],
+    queryFn: () => {
+      const hasta = new Date();
+      const desde = new Date(hasta.getTime() - dias * 86_400_000);
+      const qs = new URLSearchParams({ desde: desde.toISOString(), hasta: hasta.toISOString() });
+      return api.get<Schemas["AdherenceReport"]>(
+        `/patients/${patientId}/medications/adherence?${qs}`
+      );
+    },
+  });
+}
+
+/** Dosis ya registradas de un medicamento (para marcar las de hoy). */
+export function useDosisRegistradas(patientId: string | undefined, medicationId: string) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "medications", medicationId, "doses"],
+    queryFn: () =>
+      api.get<Schemas["MedicationDose"][]>(
+        `/patients/${patientId}/medications/${medicationId}/doses`
+      ),
+  });
+}
+
+// --- Asistente IA -------------------------------------------------------------
+
+export function useMensajesAsistente(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "assistant", "messages"],
+    queryFn: () =>
+      api.get<Schemas["AssistantMessage"][]>(`/patients/${patientId}/assistant/messages?limit=20`),
+  });
+}
+
+export function usePreguntar(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Schemas["AssistantQuery"]) =>
+      api.post<Schemas["AssistantAnswer"]>(`/patients/${patientId}/assistant/ask`, payload),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "assistant"] }),
+  });
+}
+
+export function useMetricaAsistente(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "assistant", "metrica"],
+    queryFn: () =>
+      api.get<Schemas["AsistenteMetric"]>(`/patients/${patientId}/metrics/asistente`),
+  });
+}
+
+// --- Resúmenes médicos ----------------------------------------------------------
+
+export function useResumenes(patientId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId,
+    queryKey: ["patients", patientId, "summaries"],
+    queryFn: () => api.get<Schemas["Summary"][]>(`/patients/${patientId}/summaries`),
+    // Mientras alguno se está generando, se consulta cada 3 s (respaldo de Realtime).
+    refetchInterval: (q) =>
+      q.state.data?.some((r) => r.estado === "generando") ? 3000 : false,
+  });
+}
+
+export function useResumen(patientId: string | undefined, summaryId: string | undefined) {
+  return useQuery({
+    enabled: !!patientId && !!summaryId,
+    queryKey: ["patients", patientId, "summaries", summaryId],
+    queryFn: () => api.get<Schemas["Summary"]>(`/patients/${patientId}/summaries/${summaryId}`),
+    refetchInterval: (q) => (q.state.data?.estado === "generando" ? 3000 : false),
+  });
+}
+
+export function useGenerarResumen(patientId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dias, forzar }: { dias: number; forzar?: boolean }) =>
+      api.post<Schemas["Summary"]>(
+        `/patients/${patientId}/summaries?dias=${dias}${forzar ? "&forzar=true" : ""}`
+      ),
+    onSettled: () => qc.invalidateQueries({ queryKey: ["patients", patientId, "summaries"] }),
+  });
+}
+
+// --- Centros y farmacias ----------------------------------------------------------
+
+export function useCentros(filtros: { region?: string; tipo?: string }) {
+  return useQuery({
+    queryKey: ["centers", filtros],
+    queryFn: () => {
+      const qs = new URLSearchParams({ limit: "200" });
+      if (filtros.region) qs.set("region", filtros.region);
+      if (filtros.tipo) qs.set("tipo", filtros.tipo);
+      return api.get<Schemas["Center"][]>(`/centers?${qs}`);
+    },
+    staleTime: 60 * 60_000,
+  });
+}
+
+// --- Derechos ARCO (Ley 21.719) -----------------------------------------------------
+
+export function useExportarDatos() {
+  return useMutation({
+    mutationFn: () => api.get<Schemas["DataExport"]>("/me/data-export"),
+  });
+}
+
+export function useEliminarCuenta() {
+  return useMutation({
+    mutationFn: () => api.delete<void>("/me?confirmar=true"),
   });
 }

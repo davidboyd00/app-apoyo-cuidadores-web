@@ -1,5 +1,14 @@
 import { api, ApiError, type Schemas } from "./api";
-import { encolar, marcarError, pendientes, quitar, type Pendiente } from "./outbox";
+import {
+  encolar,
+  esDosis,
+  marcarError,
+  pendientes,
+  quitar,
+  type Pendiente,
+  type PendienteDosis,
+  type PendienteEntrada,
+} from "./outbox";
 import { mensajeError } from "../utils/errores";
 
 // Errores que no son culpa del registro: se conserva y se reintenta luego.
@@ -16,6 +25,19 @@ export function esReintentable(err: unknown): boolean {
 }
 
 async function enviar(p: Pendiente) {
+  if (esDosis(p)) {
+    const dosis: Schemas["MedicationDoseCreate"] = {
+      scheduled_for: p.scheduled_for,
+      taken_at: p.taken_at,
+      status: p.status,
+      client_id: p.client_id,
+      registrado_en: p.registrado_en,
+    };
+    return api.post<Schemas["MedicationDose"]>(
+      `/patients/${p.patient_id}/medications/${p.medication_id}/doses`,
+      dosis
+    );
+  }
   const cuerpo: Schemas["EntryCreate"] = {
     kind: p.kind,
     content: p.content,
@@ -28,11 +50,11 @@ async function enviar(p: Pendiente) {
 }
 
 /**
- * Intenta enviar un registro nuevo ahora. Si no se pudo por causa reintentable
+ * Intenta enviar un registro nuevo (entrada o dosis) ahora. Si no se pudo por causa reintentable
  * (sin red, servidor caído), lo deja en la cola local y devuelve "encolada".
  * Si el servidor lo rechaza por validación, no se guarda: el error sube al form.
  */
-export async function registrarEntrada(p: Pendiente): Promise<"enviada" | "encolada"> {
+export async function registrar(p: Pendiente): Promise<"enviada" | "encolada"> {
   try {
     await enviar(p);
     return "enviada";
@@ -45,12 +67,15 @@ export async function registrarEntrada(p: Pendiente): Promise<"enviada" | "encol
   }
 }
 
+export const registrarEntrada = (p: PendienteEntrada) => registrar(p);
+export const registrarDosis = (p: PendienteDosis) => registrar(p);
+
 let enCurso: Promise<void> | null = null;
 
 /**
  * Envía la cola en orden (la más antigua primero). Se detiene en el primer
  * error reintentable para no martillar un servidor caído. `alTerminar` recibe
- * los pacientes que recibieron entradas, para refrescar sus feeds.
+ * los pacientes que recibieron registros, para refrescar sus datos.
  */
 export function sincronizar(alTerminar?: (pacientes: string[]) => void): Promise<void> {
   if (enCurso) return enCurso;
