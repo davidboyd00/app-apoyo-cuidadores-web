@@ -105,6 +105,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patients/{patient_id}/entries/{entry_id}/historial": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Historial
+         * @description Historial para la familia: la versión original tal como se escribió
+         *     (la fila de `log_entries` nunca cambia) y cada corrección o anulación con
+         *     su autor, hora y motivo. Es lo que promete la nota de trazabilidad de los
+         *     resúmenes. RLS limita a los miembros del grupo.
+         */
+        get: operations["historial_patients__patient_id__entries__entry_id__historial_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/patients/{patient_id}/entries/{entry_id}/anulacion": {
         parameters: {
             query?: never;
@@ -454,6 +477,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/patients/{patient_id}/metrics/asistente": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Asistente Verificable
+         * @description KPI del asistente (>90% de respuestas verificables).
+         *
+         *     Verificable = cita al menos una entrada de la bitácora, o declara que la
+         *     bitácora no alcanza (`suficiente=false`): en ambos casos la familia puede
+         *     comprobar la respuesta contra lo registrado. Solo lee ids y flags, nunca
+         *     el texto de preguntas ni respuestas. RLS filtra por membresía.
+         */
+        get: operations["asistente_verificable_patients__patient_id__metrics_asistente_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/patients/{patient_id}/audit": {
         parameters: {
             query?: never;
@@ -471,6 +519,47 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/turnos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar
+         * @description Turnos que se cruzan con la ventana [desde, hasta], por hora de inicio.
+         */
+        get: operations["listar_patients__patient_id__turnos_get"];
+        put?: never;
+        /**
+         * Crear
+         * @description Agenda un turno. Sin `cuidador_id`, el turno es de quien lo crea.
+         */
+        post: operations["crear_patients__patient_id__turnos_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/turnos/{turno_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Eliminar */
+        delete: operations["eliminar_patients__patient_id__turnos__turno_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -636,6 +725,24 @@ export interface components {
             /** Porcentaje Adherencia */
             porcentaje_adherencia: number;
         };
+        /**
+         * AsistenteMetric
+         * @description Respuestas verificables del asistente (KPI comprometido: >90%).
+         *
+         *     Una respuesta es verificable si cita al menos una entrada de la bitácora
+         *     o si declara que la bitácora no alcanza para responder (`suficiente=false`).
+         */
+        AsistenteMetric: {
+            ventana: components["schemas"]["VentanaTemporal"];
+            /** Total Respuestas */
+            total_respuestas: number;
+            /** Verificables */
+            verificables: number;
+            /** Porcentaje Verificable */
+            porcentaje_verificable: number;
+            /** Cumple Kpi */
+            cumple_kpi: boolean;
+        };
         /** AssistantAnswer */
         AssistantAnswer: {
             /** Respuesta */
@@ -647,6 +754,11 @@ export interface components {
              * Format: uuid
              */
             conversation_id: string;
+            /**
+             * Suficiente
+             * @default true
+             */
+            suficiente: boolean;
         };
         /** AssistantMessage */
         AssistantMessage: {
@@ -676,6 +788,8 @@ export interface components {
             respuesta: string;
             /** Cited Entry Ids */
             cited_entry_ids: string[];
+            /** Suficiente */
+            suficiente?: boolean | null;
             /**
              * Created At
              * Format: date-time
@@ -832,6 +946,8 @@ export interface components {
             mensajes_asistente: components["schemas"]["AssistantMessage"][];
             /** Pacientes Creados */
             pacientes_creados: components["schemas"]["Patient"][];
+            /** Turnos */
+            turnos?: components["schemas"]["Turno"][];
         };
         /** Entry */
         Entry: {
@@ -907,6 +1023,58 @@ export interface components {
             source: "text" | "voice";
             /** Client Id */
             client_id?: string | null;
+            /** Registrado En */
+            registrado_en?: string | null;
+        };
+        /**
+         * EntryHistorial
+         * @description Original + revisiones y anulación en orden cronológico.
+         */
+        EntryHistorial: {
+            original: components["schemas"]["EntryOriginal"];
+            /** Revisiones */
+            revisiones: components["schemas"]["EntryRevision"][];
+        };
+        /** EntryOriginal */
+        EntryOriginal: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "nota" | "medicamento" | "sintoma" | "animo" | "otro" | "alimentacion" | "ejercicio";
+            /** Content */
+            content: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
+            /**
+             * Source
+             * @default text
+             * @enum {string}
+             */
+            source: "text" | "voice";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
             /** Registrado En */
             registrado_en?: string | null;
         };
@@ -1220,6 +1388,59 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** Turno */
+        Turno: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Cuidador Id
+             * Format: uuid
+             */
+            cuidador_id: string;
+            /**
+             * Inicio
+             * Format: date-time
+             */
+            inicio: string;
+            /**
+             * Fin
+             * Format: date-time
+             */
+            fin: string;
+            /** Creado Por */
+            creado_por?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /**
+         * TurnoCreate
+         * @description Turno de cuidado. Sin `cuidador_id`, el turno es de quien lo crea.
+         */
+        TurnoCreate: {
+            /** Cuidador Id */
+            cuidador_id?: string | null;
+            /**
+             * Inicio
+             * Format: date-time
+             */
+            inicio: string;
+            /**
+             * Fin
+             * Format: date-time
+             */
+            fin: string;
         };
         /**
          * UpcomingDose
@@ -1548,6 +1769,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Entry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    historial_patients__patient_id__entries__entry_id__historial_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EntryHistorial"];
                 };
             };
             /** @description Validation Error */
@@ -2310,6 +2565,44 @@ export interface operations {
             };
         };
     };
+    asistente_verificable_patients__patient_id__metrics_asistente_get: {
+        parameters: {
+            query?: {
+                /** @description ISO 8601; default = hace 30 días */
+                desde?: string | null;
+                /** @description ISO 8601; default = ahora */
+                hasta?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AsistenteMetric"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     historial_patients__patient_id__audit_get: {
         parameters: {
             query?: {
@@ -2334,6 +2627,113 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AuditEntry"][];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listar_patients__patient_id__turnos_get: {
+        parameters: {
+            query?: {
+                /** @description ISO 8601; default = hace 1 día */
+                desde?: string | null;
+                /** @description ISO 8601; default = en 14 días */
+                hasta?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    crear_patients__patient_id__turnos_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TurnoCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Turno"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eliminar_patients__patient_id__turnos__turno_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+                turno_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

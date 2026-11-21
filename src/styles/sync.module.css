@@ -34,3 +34,9 @@
     padding-inline: max(16px, calc((100% - 960px) / 2));
   }
 }
+
+@media print {
+  .bar {
+    display: none !important;
+  }
+}

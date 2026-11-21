@@ -25,8 +25,8 @@ function suscribirConexion(f: () => void) {
 
 /**
  * Mantiene la cola offline sincronizada: envía al volver la red, al volver a
- * la pestaña y cada 30 s mientras haya pendientes. Al enviar, refresca el feed
- * de cada paciente afectado.
+ * la pestaña y cada 30 s mientras haya pendientes. Al enviar, refresca los
+ * datos de cada paciente afectado (bitácora y dosis).
  */
 export function SyncProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
@@ -40,7 +40,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const alTerminar = useCallback(
     (pacientes: string[]) => {
       for (const id of pacientes) {
-        void qc.invalidateQueries({ queryKey: ["patients", id, "entries"] });
+        // Bitácora y medicamentos cuelgan de ["patients", id].
+        void qc.invalidateQueries({ queryKey: ["patients", id] });
       }
     },
     [qc]

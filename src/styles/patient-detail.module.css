@@ -288,3 +288,119 @@
 .avisoEnVivo:empty {
   margin-top: -16px;
 }
+
+/* --- Pestañas de la ficha: rutas propias, desplazables en móvil --- */
+.tabs {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text-muted);
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tabActiva {
+  color: var(--primary);
+  font-weight: 700;
+  border-bottom-color: var(--primary);
+}
+
+/* --- Entrada editada: marca + historial desplegable --- */
+.editadaBoton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  min-height: 40px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.historial {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.historialPaso {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 12px;
+  border-left: 3px solid var(--border);
+}
+
+.historialVersion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.historialTexto {
+  white-space: pre-wrap;
+}
+
+/* --- Dictado por voz --- */
+.dictado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.dictadoAviso {
+  flex-basis: 100%;
+}
+
+/* En el celular las 6 secciones quedan a la vista (grilla de 3 × 2) en vez
+   de esconderse a la derecha: más fácil de encontrar para cualquier edad. */
+@media (max-width: 639px) {
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    border-bottom: 0;
+    overflow: visible;
+  }
+
+  .tab {
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+    padding: 6px 8px;
+    border: 1px solid var(--border-input);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-size: var(--fs-sm);
+  }
+
+  .tabActiva {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  .tab.tabActiva:hover {
+    color: #fff;
+  }
+}

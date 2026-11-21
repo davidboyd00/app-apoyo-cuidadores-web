@@ -149,3 +149,15 @@
   color: var(--text-muted);
   font-size: var(--fs-sm);
 }
+
+/* Al imprimir (resumen médico) solo sale el documento. */
+@media print {
+  .header,
+  .footer,
+  .skipLink {
+    display: none !important;
+  }
+  .shell {
+    background: #fff;
+  }
+}
