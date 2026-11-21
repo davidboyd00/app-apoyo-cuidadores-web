@@ -1,0 +1,36 @@
+/* Indicador de sincronización: franja fina bajo el header, a ancho completo en móvil. */
+.bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 8px 16px;
+  font-size: var(--fs-sm);
+  border-bottom: 1px solid var(--border);
+}
+
+.offline {
+  background: var(--surface-warning, #fff4e5);
+  color: var(--text);
+}
+
+.pending {
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+.error {
+  background: #fdecec;
+  color: #8a1c1c;
+}
+
+.action {
+  margin-left: auto;
+  min-height: var(--control-h);
+}
+
+@media (min-width: 640px) {
+  .bar {
+    padding-inline: max(16px, calc((100% - 960px) / 2));
+  }
+}
