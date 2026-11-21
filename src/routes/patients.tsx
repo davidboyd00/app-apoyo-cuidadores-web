@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { AppShell } from "../components/app-shell";
+import { Avatar } from "../components/avatar";
 import { KindChip } from "../components/kind-chip";
 import { SlowHint } from "../components/slow-hint";
 import { usePatientEntries, usePatients } from "../hooks/use-api";
@@ -67,12 +68,16 @@ function PatientCard({ paciente }: { paciente: Schemas["Patient"] }) {
 
   return (
     <Link to={`/patients/${paciente.id}`} className={`card ${s.cardLink}`}>
-      <div className="stack-sm">
-        <span className={s.name}>{paciente.nombre}</span>
-        {anios !== null && <span className="muted small">{anios} años</span>}
+      <div className={s.cabecera}>
+        <Avatar nombre={paciente.nombre} clave={paciente.id} desconocido={false} />
+        <div className="stack-sm">
+          <span className={s.name}>{paciente.nombre}</span>
+          {anios !== null && <span className="muted small">{anios} años</span>}
+        </div>
       </div>
 
       <div className={s.ultima}>
+        <span className={`muted small ${s.etiqueta}`}>Última entrada</span>
         {ultima.isLoading && <span className="muted">Cargando última entrada…</span>}
         {ultima.error && <span className="muted">No pudimos cargar la bitácora.</span>}
         {ultima.data && !entrada && <span className="muted">Sin entradas todavía.</span>}

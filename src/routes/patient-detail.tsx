@@ -216,10 +216,15 @@ export default function PatientDetailPage() {
       </nav>
 
       <header className={`card ${s.hero}`}>
-        <div className="stack-sm">
-          <h1>{paciente.data.nombre}</h1>
-          {anios !== null && <p className="muted">{anios} años</p>}
-          {paciente.data.notas && <p className={s.notas}>{paciente.data.notas}</p>}
+        <div className={s.heroIdentidad}>
+          <div className={s.heroAvatar}>
+            <Avatar nombre={paciente.data.nombre} clave={paciente.data.id} desconocido={false} />
+          </div>
+          <div className="stack-sm">
+            <h1>{paciente.data.nombre}</h1>
+            {anios !== null && <p className="muted">{anios} años</p>}
+            {paciente.data.notas && <p className={s.notas}>{paciente.data.notas}</p>}
+          </div>
         </div>
         {id && <RelevoBadge patientId={id} />}
       </header>
@@ -292,7 +297,7 @@ export default function PatientDetailPage() {
             {pendientesVisibles.map((p) => (
               <li key={p.client_id} className={s.entry}>
                 <Avatar nombre="Tú" clave={session?.user.id ?? "yo"} desconocido={false} />
-                <article className={`card ${s.entryCard}`}>
+                <article className={`card ${s.entryCard}`} data-kind={p.kind}>
                   <div className={s.entryHead}>
                     <strong>Tú</strong>
                     <span className={p.error ? "badge badge-warning" : "badge"}>
@@ -341,7 +346,7 @@ export default function PatientDetailPage() {
                       />
                     </div>
                   ) : (
-                    <article className={`card ${s.entryCard}`}>
+                    <article className={`card ${s.entryCard}`} data-kind={e.kind}>
                       <div className={s.entryHead}>
                         {autor.etiqueta ? (
                           <strong>{autor.etiqueta}</strong>
@@ -359,33 +364,33 @@ export default function PatientDetailPage() {
                           {tiempoRelativo(e.occurred_at)}
                         </time>
                         <KindChip kind={e.kind} />
+                        {esMia && anulandoId !== e.id && (
+                          <div className={s.entryActions}>
+                            <button
+                              ref={(el) => {
+                                if (el) botonesEditar.current.set(e.id, el);
+                                else botonesEditar.current.delete(e.id);
+                              }}
+                              onClick={() => setEditandoId(e.id)}
+                              className="btn btn-ghost"
+                              aria-label={`Editar entrada de ${tiempoRelativo(e.occurred_at)}`}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => {
+                                setAnulandoId(e.id);
+                                setMotivoAnulacion("");
+                              }}
+                              className="btn btn-ghost btn-danger"
+                              aria-label={`Borrar entrada de ${tiempoRelativo(e.occurred_at)}`}
+                            >
+                              Borrar
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <p className="entry-content">{e.content}</p>
-                      {esMia && anulandoId !== e.id && (
-                        <div className={s.entryActions}>
-                          <button
-                            ref={(el) => {
-                              if (el) botonesEditar.current.set(e.id, el);
-                              else botonesEditar.current.delete(e.id);
-                            }}
-                            onClick={() => setEditandoId(e.id)}
-                            className="btn btn-ghost"
-                            aria-label={`Editar entrada de ${tiempoRelativo(e.occurred_at)}`}
-                          >
-                            Editar
-                          </button>
-                          <button
-                            onClick={() => {
-                              setAnulandoId(e.id);
-                              setMotivoAnulacion("");
-                            }}
-                            className="btn btn-ghost btn-danger"
-                            aria-label={`Borrar entrada de ${tiempoRelativo(e.occurred_at)}`}
-                          >
-                            Borrar
-                          </button>
-                        </div>
-                      )}
                       {esMia && anulandoId === e.id && (
                         <form
                           className="stack-sm"
