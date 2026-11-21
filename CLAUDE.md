@@ -73,13 +73,13 @@ npm run build       # verifica que el bundle compila
 En Vite, solo variables con prefijo `VITE_` quedan expuestas al cliente.
 No pongas aquí nada que no deba viajar al navegador.
 
-## Fuera de alcance para la entrega 10/10
+## Alcance de la entrega final (24/11)
 
-Priorizamos **bitácora de cuidados** y **gestión de perfiles**. Quedan
-fuera (ya existen en el backend pero no se construye UI por ahora):
-asistente IA, resúmenes médicos, notificaciones de medicamentos, ARCO
-completo (export y delete account). El gate de consentimiento sí es
-obligatorio por Ley 21.719.
+Bitácora (offline, voz, historial inmutable), turnos, medicamentos,
+asistente IA con citas, resúmenes imprimibles, red de cuidado, centros,
+perfil con ARCO y gate de consentimiento. Verificación antes de entregar:
+`npm run lint`, `npx tsc -b`, `npm run build` y `e2e/flujo_real.py` contra la
+demo local del backend.
 
 ## Repos hermanos
 

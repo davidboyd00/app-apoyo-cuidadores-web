@@ -8,6 +8,26 @@ dependientes. Consume el backend
 y usa Supabase para auth. Hermano del cliente móvil
 [`caregivers-mobile`](https://github.com/davidboyd00/app-apoyo-cuidadores-movil-).
 
+## Qué hace (MVP final)
+
+Por cada persona cuidada, en pestañas:
+
+- **Bitácora** compartida: registro escrito o **dictado** (Web Speech API,
+  en el navegador), **sin conexión** con cola local y sincronización,
+  correcciones y borrados con motivo e **historial** visible.
+- **Turnos** de cuidado y relevo (lo registrado durante cada turno).
+- **Medicamentos**: próximas dosis (también sin conexión), adherencia.
+- **Asistente IA** que responde solo con la bitácora y muestra los registros
+  citados.
+- **Resúmenes médicos** asíncronos, imprimibles o en PDF.
+- **Red de cuidado**: miembros y roles.
+
+Además: centros y farmacias, perfil con descarga de datos y eliminación de
+cuenta (Ley 21.719), gate de consentimiento.
+
+Docs para usuarios y piloto: `docs/MANUAL_USUARIO.md`, `docs/PILOTO_SUS.md`,
+`docs/GUION_VIDEO_DEMO.md`.
+
 ## Stack
 
 - **Vite** + **React 19** + **TypeScript**.
@@ -75,6 +95,17 @@ CORS_ORIGINS=https://<dominio-del-web>,http://localhost:5173
   si se usan) y `http://localhost:5173` si se prueba en local contra Render.
 - Si falta, el navegador muestra un error de CORS y en Network las
   requests al backend fallan sin código HTTP; la app solo ve "Failed to fetch".
+
+## Prueba de punta a punta contra el backend real
+
+`e2e/flujo_real.py` recorre el MVP en un celular simulado contra la demo
+local del backend (Postgres + PostgREST + API, datos ficticios, IA
+simulada). Pasos en el docstring del archivo. Antes de entregar:
+
+```bash
+npm run lint && npx tsc -b && npm run build
+python e2e/flujo_real.py --demo /tmp/demo.json --capturas /tmp/capturas
+```
 
 ## Estructura
 
