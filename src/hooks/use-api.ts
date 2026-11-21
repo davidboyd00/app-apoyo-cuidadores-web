@@ -122,20 +122,11 @@ export function useBitacora(patientId: string | undefined, kind?: EntryKind) {
   });
 }
 
-export function useCreateEntry(patientId: string | undefined) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (payload: Schemas["EntryCreate"]) =>
-      api.post<Schemas["Entry"]>(`/patients/${patientId}/entries`, payload),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
-    },
-  });
-}
-
-// Editar/borrar: RLS decide si se puede (autor o admin). Si bloquea, el
-// backend responde 404 con un `detail` en español que mostramos tal cual.
-export function useUpdateEntry(patientId: string | undefined) {
+// Historial inmutable: nunca se edita ni se borra la fila. Editar agrega una
+// revisión (con motivo) y "borrar" es una anulación terminal (con motivo). La
+// bitácora vigente oculta las anuladas. RLS decide quién puede; si bloquea, el
+// backend responde con un `detail` en español que mostramos tal cual.
+export function useRevisarEntry(patientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -143,25 +134,26 @@ export function useUpdateEntry(patientId: string | undefined) {
       cambios,
     }: {
       entryId: string;
-      cambios: Schemas["EntryUpdate"];
+      cambios: Schemas["EntryRevisionEditar"];
     }) =>
-      api.patch<Schemas["Entry"]>(
-        `/patients/${patientId}/entries/${entryId}`,
+      api.post<Schemas["EntryRevision"]>(
+        `/patients/${patientId}/entries/${entryId}/revisiones`,
         cambios
       ),
-    // onSettled (no solo onSuccess): si RLS responde 404 porque la entrada
-    // ya no existe, el feed se refresca y deja de mostrarla.
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
     },
   });
 }
 
-export function useDeleteEntry(patientId: string | undefined) {
+export function useAnularEntry(patientId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (entryId: string) =>
-      api.delete<void>(`/patients/${patientId}/entries/${entryId}`),
+    mutationFn: ({ entryId, motivo }: { entryId: string; motivo: string }) =>
+      api.post<Schemas["EntryRevision"]>(
+        `/patients/${patientId}/entries/${entryId}/anulacion`,
+        { motivo }
+      ),
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["patients", patientId, "entries"] });
     },

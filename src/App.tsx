@@ -4,6 +4,7 @@ import { ConsentGate } from "./components/consent-gate";
 import { ProtectedRoute } from "./components/protected-route";
 import { AuthProvider } from "./providers/auth-provider";
 import { QueryProvider } from "./providers/query-provider";
+import { SyncProvider } from "./providers/sync-provider";
 import ConsentPage from "./routes/consent";
 import PatientDetailPage from "./routes/patient-detail";
 import PatientNewPage from "./routes/patient-new";
@@ -26,6 +27,7 @@ function ProtectedWithConsent() {
 export default function App() {
   return (
     <QueryProvider>
+      <SyncProvider>
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -45,6 +47,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </SyncProvider>
     </QueryProvider>
   );
 }

@@ -9,17 +9,19 @@ import { KindChip } from "../components/kind-chip";
 import { MembersPanel } from "../components/members-panel";
 import { SlowHint } from "../components/slow-hint";
 import {
+  useAnularEntry,
   useBitacora,
-  useDeleteEntry,
   useMembers,
   usePatient,
   useRelevo,
-  useUpdateEntry,
+  useRevisarEntry,
 } from "../hooks/use-api";
 import { useTituloPagina } from "../hooks/use-titulo-pagina";
 import type { Schemas } from "../lib/api";
+import { quitar, type Pendiente } from "../lib/outbox";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../providers/auth-provider";
+import { useSincronizacion } from "../providers/sync-provider";
 import s from "../styles/patient-detail.module.css";
 import {
   KINDS,
@@ -45,8 +47,11 @@ export default function PatientDetailPage() {
   const entradas = bitacora.data?.pages.flat();
   const miembros = useMembers(id);
   const { session } = useAuth();
-  const actualizar = useUpdateEntry(id);
-  const borrar = useDeleteEntry(id);
+  const revisar = useRevisarEntry(id);
+  const anular = useAnularEntry(id);
+  const { pendientes } = useSincronizacion();
+  const [anulandoId, setAnulandoId] = useState<string | null>(null);
+  const [motivoAnulacion, setMotivoAnulacion] = useState("");
   const [editandoId, setEditandoId] = useState<string | null>(null);
   const [errorPorEntrada, setErrorPorEntrada] = useState<Record<string, string>>({});
   const qc = useQueryClient();
@@ -125,37 +130,60 @@ export default function PatientDetailPage() {
     return { nombre: null, etiqueta: "Ex integrante de la red" };
   }
 
-  // Solo se envían los campos que cambiaron; si no cambió nada, se cierra.
+  // Historial inmutable: editar agrega una revisión con motivo; la fila
+  // original no cambia. Solo se envía si cambió algo.
   async function guardarEdicion(entrada: Schemas["Entry"], valores: EntryValues) {
-    const cambios: Schemas["EntryUpdate"] = {};
-    if (valores.kind !== entrada.kind) cambios.kind = valores.kind;
-    if (valores.content !== entrada.content) cambios.content = valores.content;
-    if (valores.occurred_at !== entrada.occurred_at) cambios.occurred_at = valores.occurred_at;
-    if (Object.keys(cambios).length > 0) {
-      await actualizar.mutateAsync({ entryId: entrada.id, cambios });
-      setAnuncio("Cambios guardados.");
+    const cambio =
+      valores.kind !== entrada.kind ||
+      valores.content !== entrada.content ||
+      valores.occurred_at !== entrada.occurred_at;
+    if (cambio) {
+      await revisar.mutateAsync({
+        entryId: entrada.id,
+        cambios: {
+          motivo: valores.motivo ?? "",
+          kind: valores.kind,
+          content: valores.content,
+          occurred_at: valores.occurred_at,
+        },
+      });
+      setAnuncio("Cambios guardados. La versión anterior queda en el historial.");
     }
     salirDeEdicion(entrada.id);
   }
 
-  async function borrarEntrada(entryId: string) {
-    if (!window.confirm("¿Borrar esta entrada de la bitácora? No se puede deshacer.")) {
-      return;
-    }
+  // "Borrar" es una anulación con motivo: la entrada deja de verse, pero queda
+  // en el historial con quién la borró, cuándo y por qué.
+  async function confirmarAnulacion(entryId: string) {
+    const motivo = motivoAnulacion.trim();
     setErrorPorEntrada((prev) => {
       const siguiente = { ...prev };
       delete siguiente[entryId];
       return siguiente;
     });
     try {
-      await borrar.mutateAsync(entryId);
-      setAnuncio("Entrada borrada.");
+      await anular.mutateAsync({ entryId, motivo });
+      setAnulandoId(null);
+      setMotivoAnulacion("");
+      setAnuncio("Entrada borrada. Queda registrada en el historial.");
       tituloRegistros.current?.focus();
     } catch (err) {
       const mensaje = mensajeError(err, "No se pudo borrar la entrada.");
       setErrorPorEntrada((prev) => ({ ...prev, [entryId]: mensaje }));
     }
   }
+
+  // Un registro pendiente que el servidor rechazó: el usuario decide si lo
+  // descarta. Es dato clínico: se pide confirmación.
+  function descartarPendiente(p: Pendiente) {
+    if (!window.confirm("¿Descartar este registro que aún no se envió? Se pierde.")) return;
+    quitar(p.client_id);
+  }
+
+  // Registros de este paciente que siguen en la cola del navegador.
+  const pendientesVisibles = pendientes.filter(
+    (p) => p.patient_id === id && (!filtroKind || p.kind === filtroKind)
+  );
 
   if (paciente.isLoading) {
     return (
@@ -251,7 +279,7 @@ export default function PatientDetailPage() {
             {mensajeError(bitacora.error)}
           </p>
         )}
-        {entradas && entradas.length === 0 && (
+        {entradas && entradas.length === 0 && pendientesVisibles.length === 0 && (
           <p className={`card muted ${s.empty}`}>
             {filtroKind
               ? `No hay registros de tipo "${KIND_LABELS[filtroKind]}".`
@@ -259,9 +287,40 @@ export default function PatientDetailPage() {
           </p>
         )}
 
-        {entradas && entradas.length > 0 && (
+        {((entradas && entradas.length > 0) || pendientesVisibles.length > 0) && (
           <ol className={`list-reset ${s.timeline}`}>
-            {entradas.map((e) => {
+            {pendientesVisibles.map((p) => (
+              <li key={p.client_id} className={s.entry}>
+                <Avatar nombre="Tú" clave={session?.user.id ?? "yo"} desconocido={false} />
+                <article className={`card ${s.entryCard}`}>
+                  <div className={s.entryHead}>
+                    <strong>Tú</strong>
+                    <span className={p.error ? "badge badge-warning" : "badge"}>
+                      {p.error ? "No se envió" : "Pendiente de sincronizar"}
+                    </span>
+                    <KindChip kind={p.kind} />
+                  </div>
+                  <p className="entry-content">{p.content}</p>
+                  {p.error && (
+                    <>
+                      <p className="field-error" role="alert">
+                        {p.error}
+                      </p>
+                      <div className={s.entryActions}>
+                        <button
+                          type="button"
+                          onClick={() => descartarPendiente(p)}
+                          className="btn btn-ghost btn-danger"
+                        >
+                          Descartar
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </article>
+              </li>
+            ))}
+            {(entradas ?? []).map((e) => {
               // Mostrar botones solo al autor es UX; quien autoriza es RLS.
               const esMia = e.author_id === session?.user.id;
               const autor = autorDe(e.author_id, esMia);
@@ -302,7 +361,7 @@ export default function PatientDetailPage() {
                         <KindChip kind={e.kind} />
                       </div>
                       <p className="entry-content">{e.content}</p>
-                      {esMia && (
+                      {esMia && anulandoId !== e.id && (
                         <div className={s.entryActions}>
                           <button
                             ref={(el) => {
@@ -316,16 +375,59 @@ export default function PatientDetailPage() {
                             Editar
                           </button>
                           <button
-                            onClick={() => borrarEntrada(e.id)}
-                            disabled={borrar.isPending && borrar.variables === e.id}
+                            onClick={() => {
+                              setAnulandoId(e.id);
+                              setMotivoAnulacion("");
+                            }}
                             className="btn btn-ghost btn-danger"
                             aria-label={`Borrar entrada de ${tiempoRelativo(e.occurred_at)}`}
                           >
-                            {borrar.isPending && borrar.variables === e.id
-                              ? "Borrando…"
-                              : "Borrar"}
+                            Borrar
                           </button>
                         </div>
+                      )}
+                      {esMia && anulandoId === e.id && (
+                        <form
+                          className="stack-sm"
+                          aria-label="Borrar entrada"
+                          onSubmit={(ev) => {
+                            ev.preventDefault();
+                            void confirmarAnulacion(e.id);
+                          }}
+                        >
+                          <label className="field-label" htmlFor={`motivo-${e.id}`}>
+                            Motivo para borrar
+                          </label>
+                          <input
+                            id={`motivo-${e.id}`}
+                            value={motivoAnulacion}
+                            onChange={(ev) => setMotivoAnulacion(ev.target.value)}
+                            maxLength={500}
+                            className="input"
+                            placeholder="Ej: Se registró en la persona equivocada."
+                          />
+                          <p className="muted small">
+                            La entrada deja de verse, pero queda en el historial con quién la borró, cuándo y por qué.
+                          </p>
+                          <div className={s.entryActions}>
+                            <button
+                              type="submit"
+                              disabled={motivoAnulacion.trim().length < 3 || anular.isPending}
+                              className="btn btn-ghost btn-danger"
+                            >
+                              {anular.isPending && anular.variables?.entryId === e.id
+                                ? "Borrando…"
+                                : "Confirmar borrado"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setAnulandoId(null)}
+                              className="btn btn-ghost"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </form>
                       )}
                       {errorPorEntrada[e.id] && (
                         <p className="field-error" role="alert">

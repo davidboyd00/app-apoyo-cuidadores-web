@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import s from "../styles/shell.module.css";
 import { AppHeader } from "./app-header";
+import { SyncIndicator } from "./sync-indicator";
 
 /** Estructura común de las pantallas con sesión: header fijo, contenido y footer. */
 export function AppShell({ children }: { children: ReactNode }) {
@@ -12,6 +13,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Saltar al contenido
       </a>
       <AppHeader />
+      <SyncIndicator />
       <main id="contenido" className={`container page stack ${s.main}`}>
         {children}
       </main>

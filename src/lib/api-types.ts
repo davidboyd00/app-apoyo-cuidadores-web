@@ -58,14 +58,20 @@ export interface paths {
          * Listar
          * @description Feed de la bitácora, más reciente primero (occurred_at desc).
          *
-         *     `kind` y `antes` son aditivos: sin ellos el comportamiento es el de
-         *     siempre (`limit` + `desde`). Con `antes` se pagina hacia atrás; dos
-         *     entradas con exactamente el mismo occurred_at en el borde de página
-         *     podrían saltarse (caso improbable: occurred_at tiene microsegundos).
+         *     Devuelve el estado vigente de cada entrada: si fue corregida, `content`,
+         *     `kind` y `occurred_at` son los de la última revisión. El historial completo
+         *     está en `GET /entries/{id}/revisiones`.
          */
         get: operations["listar_patients__patient_id__entries_get"];
         put?: never;
-        /** Crear */
+        /**
+         * Crear
+         * @description Registra una entrada. Es idempotente si viene `client_id`.
+         *
+         *     Un reintento con el mismo `client_id` devuelve la entrada ya creada con
+         *     status 200 (no duplica ni falla). Con `registrado_en` se guarda la hora en
+         *     que se escribió sin conexión; `created_at` es la hora de sincronización.
+         */
         post: operations["crear_patients__patient_id__entries_post"];
         delete?: never;
         options?: never;
@@ -73,7 +79,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/patients/{patient_id}/entries/{entry_id}": {
+    "/patients/{patient_id}/entries/{entry_id}/revisiones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Listar Revisiones
+         * @description Historial completo de una entrada: revisiones y anulación, en orden
+         *     cronológico. Lo ven todos los miembros del grupo (RLS).
+         */
+        get: operations["listar_revisiones_patients__patient_id__entries__entry_id__revisiones_get"];
+        put?: never;
+        /**
+         * Revisar
+         * @description Corrige una entrada. No la modifica: agrega una revisión con autor, hora
+         *     y motivo. Solo el autor original o un admin pueden revisar (RLS).
+         */
+        post: operations["revisar_patients__patient_id__entries__entry_id__revisiones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/entries/{entry_id}/anulacion": {
         parameters: {
             query?: never;
             header?: never;
@@ -82,13 +114,17 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
-        /** Eliminar */
-        delete: operations["eliminar_patients__patient_id__entries__entry_id__delete"];
+        /**
+         * Anular
+         * @description Anula una entrada (p. ej. registrada por error). La entrada no se borra:
+         *     queda en el historial marcada como anulada, con motivo, autor y hora.
+         *     La anulación es definitiva.
+         */
+        post: operations["anular_patients__patient_id__entries__entry_id__anulacion_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /** Actualizar */
-        patch: operations["actualizar_patients__patient_id__entries__entry_id__patch"];
+        patch?: never;
         trace?: never;
     };
     "/patients/{patient_id}/medications": {
@@ -153,7 +189,11 @@ export interface paths {
         /** Listar Dosis */
         get: operations["listar_dosis_patients__patient_id__medications__medication_id__doses_get"];
         put?: never;
-        /** Registrar Dosis */
+        /**
+         * Registrar Dosis
+         * @description Registra una dosis. Idempotente con `client_id` (carga offline): un
+         *     reintento devuelve la dosis ya registrada con status 200.
+         */
         post: operations["registrar_dosis_patients__patient_id__medications__medication_id__doses_post"];
         delete?: never;
         options?: never;
@@ -350,8 +390,38 @@ export interface paths {
         /** Listar */
         get: operations["listar_patients__patient_id__summaries_get"];
         put?: never;
-        /** Generar */
+        /**
+         * Generar
+         * @description Pide un resumen médico.
+         *
+         *     - Si hay un resumen listo de las últimas 24 h con la misma ventana, lo
+         *       devuelve al instante con status 200 (no llama al LLM).
+         *     - Si ya hay uno en curso, devuelve ese con status 200.
+         *     - Si no, crea el resumen en estado `generando` y lo completa en segundo
+         *       plano: responde 202. La app se entera por Realtime o consultando
+         *       `GET /summaries/{id}`.
+         */
         post: operations["generar_patients__patient_id__summaries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/patients/{patient_id}/summaries/{summary_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Obtener
+         * @description Estado de un resumen. La app consulta aquí si no usa Realtime.
+         */
+        get: operations["obtener_patients__patient_id__summaries__summary_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -756,6 +826,8 @@ export interface components {
             membresias: components["schemas"]["MembershipExport"][];
             /** Entradas Bitacora */
             entradas_bitacora: components["schemas"]["Entry"][];
+            /** Revisiones Bitacora */
+            revisiones_bitacora: components["schemas"]["EntryRevision"][];
             /** Mensajes Asistente */
             mensajes_asistente: components["schemas"]["AssistantMessage"][];
             /** Pacientes Creados */
@@ -801,6 +873,17 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Registrado En */
+            registrado_en?: string | null;
+            /** Anulada */
+            anulada?: boolean | null;
+            /** Editada */
+            editada?: boolean | null;
+        };
+        /** EntryAnulacion */
+        EntryAnulacion: {
+            /** Motivo */
+            motivo: string;
         };
         /** EntryCreate */
         EntryCreate: {
@@ -822,15 +905,68 @@ export interface components {
              * @enum {string}
              */
             source: "text" | "voice";
+            /** Client Id */
+            client_id?: string | null;
+            /** Registrado En */
+            registrado_en?: string | null;
         };
-        /** EntryUpdate */
-        EntryUpdate: {
+        /** EntryRevision */
+        EntryRevision: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Entry Id
+             * Format: uuid
+             */
+            entry_id: string;
+            /**
+             * Patient Id
+             * Format: uuid
+             */
+            patient_id: string;
+            /**
+             * Author Id
+             * Format: uuid
+             */
+            author_id: string;
+            /**
+             * Accion
+             * @enum {string}
+             */
+            accion: "editar" | "anular";
+            /** Motivo */
+            motivo: string;
             /** Kind */
             kind?: ("nota" | "medicamento" | "sintoma" | "animo" | "otro" | "alimentacion" | "ejercicio") | null;
             /** Content */
             content?: string | null;
             /** Occurred At */
             occurred_at?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** EntryRevisionEditar */
+        EntryRevisionEditar: {
+            /** Motivo */
+            motivo: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "nota" | "medicamento" | "sintoma" | "animo" | "otro" | "alimentacion" | "ejercicio";
+            /** Content */
+            content: string;
+            /**
+             * Occurred At
+             * Format: date-time
+             */
+            occurred_at: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -919,6 +1055,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Registrado En */
+            registrado_en?: string | null;
         };
         /** MedicationDoseCreate */
         MedicationDoseCreate: {
@@ -936,6 +1074,10 @@ export interface components {
             status: "tomada" | "omitida" | "postpuesta";
             /** Notas */
             notas?: string | null;
+            /** Client Id */
+            client_id?: string | null;
+            /** Registrado En */
+            registrado_en?: string | null;
         };
         /** MedicationUpdate */
         MedicationUpdate: {
@@ -1066,7 +1208,13 @@ export interface components {
              */
             hasta: string;
             /** Contenido */
-            contenido: string;
+            contenido?: string | null;
+            /**
+             * Estado
+             * @default listo
+             * @enum {string}
+             */
+            estado: "generando" | "listo" | "error";
             /**
              * Created At
              * Format: date-time
@@ -1271,6 +1419,8 @@ export interface operations {
                 kind?: ("nota" | "medicamento" | "sintoma" | "animo" | "otro" | "alimentacion" | "ejercicio") | null;
                 /** @description Cursor de paginación: solo entradas con occurred_at estrictamente anterior (ISO 8601). Para la página siguiente, enviar el occurred_at de la última entrada recibida. */
                 antes?: string | null;
+                /** @description Incluye entradas anuladas (marcadas con `anulada=true`). Por defecto no aparecen. */
+                incluir_anuladas?: boolean;
             };
             header?: {
                 authorization?: string | null;
@@ -1339,7 +1489,7 @@ export interface operations {
             };
         };
     };
-    eliminar_patients__patient_id__entries__entry_id__delete: {
+    listar_revisiones_patients__patient_id__entries__entry_id__revisiones_get: {
         parameters: {
             query?: never;
             header?: {
@@ -1354,11 +1504,13 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            204: {
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["EntryRevision"][];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -1371,7 +1523,7 @@ export interface operations {
             };
         };
     };
-    actualizar_patients__patient_id__entries__entry_id__patch: {
+    revisar_patients__patient_id__entries__entry_id__revisiones_post: {
         parameters: {
             query?: never;
             header?: {
@@ -1385,12 +1537,50 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["EntryUpdate"];
+                "application/json": components["schemas"]["EntryRevisionEditar"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Entry"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    anular_patients__patient_id__entries__entry_id__anulacion_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryAnulacion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2015,6 +2205,8 @@ export interface operations {
         parameters: {
             query?: {
                 dias?: number;
+                /** @description Ignora un resumen reciente y genera uno nuevo. */
+                forzar?: boolean;
             };
             header?: {
                 authorization?: string | null;
@@ -2027,7 +2219,41 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Summary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    obtener_patients__patient_id__summaries__summary_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                patient_id: string;
+                summary_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
