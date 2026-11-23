@@ -69,6 +69,9 @@ Render pide `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` y el resto ya
 viene en el archivo (API en `https://caregivers-backend.onrender.com`).
 Después, poner la URL del sitio en `CORS_ORIGINS` del backend (abajo).
 
+Desplegado el 23/11/2026 en **https://caregivers-web-wxm3.onrender.com**
+(Render agregó `-wxm3` porque `caregivers-web.onrender.com` es de otra cuenta).
+
 Configuración en el hosting (si se usa otro):
 
 - **Build command**: `npm ci && npm run build` · **Publish directory**: `dist`.
