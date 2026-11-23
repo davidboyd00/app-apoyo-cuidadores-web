@@ -13,7 +13,8 @@
 
 .heroIdentidad {
   display: flex;
-  align-items: center;
+  /* Arriba: el avatar acompaña al nombre aunque haya notas largas. */
+  align-items: flex-start;
   gap: 16px;
   min-width: 0;
 }
@@ -27,10 +28,26 @@
   box-shadow: 0 0 0 3px var(--primary-soft), 0 0 0 4px var(--surface);
 }
 
+/* Notas de la persona (alergias, condiciones): información clínica que todo
+   cuidador debe ver primero. Franja ámbar + etiqueta, no solo color. */
 .notas {
   max-width: 60ch;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border-inline-start: 4px solid var(--warning);
+  background: var(--surface);
   font-size: var(--fs-sm);
   white-space: pre-wrap;
+}
+
+.notasEtiqueta {
+  display: block;
+  color: var(--warning);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .tabs {

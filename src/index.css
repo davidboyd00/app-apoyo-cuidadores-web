@@ -1,64 +1,71 @@
 /* ==========================================================================
-   Base visual de la app de cuidadores.
-   Público: familiares (muchos >50 años, en celular). Prioridad: calma,
-   claridad y legibilidad. Todo color/tamaño sale de estas variables.
+   Base visual de la app de cuidadores · uso médico primero.
+   Público: familiares (muchos >50 años, en celular), a veces con estrés o
+   poca luz. Prioridad: seguridad clínica, legibilidad y calma.
+   - Tipografía Atkinson Hyperlegible (diseñada para baja visión), servida por
+     la propia app: sin peticiones a terceros (Ley 21.719) y funciona sin red.
+   - Colores con significado fijo: verde = tomado/correcto, ámbar = atención,
+     rojo = peligro o acción irreversible. Nunca solo color: siempre con texto.
+   - Contraste AA (4.5:1 texto, 3:1 bordes de controles) en claro y oscuro.
+   - Controles de 48 px y texto de 16 px como mínimo.
+   Todo color/tamaño sale de estas variables.
    ========================================================================== */
 
 :root {
-  /* Superficies y texto */
-  --bg: #f8f5f0;
+  /* Superficies y texto: fondos fríos y limpios, tinta azul petróleo */
+  --bg: #f2f6f7;
   --surface: #ffffff;
-  --surface-2: #f2ede6;
-  --text: #2e3335;
-  --text-muted: #5d6669;
-  --border: #e3ded7;
+  --surface-2: #e8f0f2;
+  --text: #102a33;
+  --text-muted: #4b5f66;
+  --border: #d6e2e5;
   /* Bordes de campos: ≥3:1 contra el fondo (WCAG 1.4.11). */
-  --border-input: #858b8d;
+  --border-input: #71878e;
 
-  /* Marca: petróleo apagado (primario) + terracota (solo acción principal) */
-  --primary: #2f6b73;
-  --primary-soft: #e3eff0;
+  /* Marca clínica: petróleo para enlaces, foco y la acción principal */
+  --primary: #0b6a78;
+  --primary-soft: #e0eff2;
   --on-primary: #ffffff;
-  --accent: #b5562f;
-  --accent-hover: #9c4726;
+  --accent: #0b6a78;
+  --accent-hover: #095561;
   --on-accent: #ffffff;
-  --focus: #2f6b73;
+  --focus: #0b6a78;
 
-  /* Estados */
+  /* Estados (mismo significado en toda la app) */
   --danger: #b42318;
   --danger-soft: #fdecea;
-  --success: #2a7348;
-  --success-soft: #e6f4ec;
-  --warning: #7a5600;
-  --warning-soft: #fbf1d9;
+  --success: #1d6b3f;
+  --success-soft: #e4f3ea;
+  --warning: #7a5300;
+  --warning-soft: #fbf0d4;
 
   /* Tipos de entrada de bitácora (fondo / texto, AA entre sí) */
-  --kind-nota-bg: #eceae6;
-  --kind-nota-fg: #4a4f51;
+  --kind-nota-bg: #e9eef0;
+  --kind-nota-fg: #3d4d53;
   --kind-sintoma-bg: #fbe7e6;
   --kind-sintoma-fg: #9b2c2c;
   --kind-animo-bg: #eee8f6;
   --kind-animo-fg: #5b3f86;
-  --kind-medicamento-bg: #e3eff0;
-  --kind-medicamento-fg: #245960;
+  --kind-medicamento-bg: #e0eff2;
+  --kind-medicamento-fg: #0a5865;
   --kind-alimentacion-bg: #fbefd9;
   --kind-alimentacion-fg: #7a4f00;
-  --kind-ejercicio-bg: #e5f2e7;
-  --kind-ejercicio-fg: #2d6a3a;
-  --kind-otro-bg: #f1ebdf;
-  --kind-otro-fg: #6a5432;
+  --kind-ejercicio-bg: #e4f3ea;
+  --kind-ejercicio-fg: #22663a;
+  --kind-otro-bg: #efeae1;
+  --kind-otro-fg: #5f4b2c;
 
-  /* Tipografía: una familia, tres tamaños */
-  --font: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --fs-sm: 15px;
+  /* Tipografía: una familia muy legible, tres tamaños (mínimo 16 px) */
+  --font: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --fs-sm: 16px;
   --fs-base: 18px;
   --fs-lg: 26px;
 
-  /* Forma */
-  --radius: 16px;
-  --radius-sm: 12px;
-  --control-h: 46px;
-  --shadow: 0 1px 2px rgb(47 40 30 / 0.04), 0 6px 18px rgb(47 40 30 / 0.06);
+  /* Forma: controles de 48 px (blanco táctil cómodo para manos mayores) */
+  --radius: 14px;
+  --radius-sm: 10px;
+  --control-h: 48px;
+  --shadow: 0 1px 2px rgb(16 42 51 / 0.05), 0 4px 14px rgb(16 42 51 / 0.06);
   --container: 880px;
 
   color-scheme: light;
@@ -66,45 +73,45 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #161a1b;
-    --surface: #1f2526;
-    --surface-2: #283031;
-    --text: #e7e4df;
-    --text-muted: #a9b0b2;
-    --border: #343c3e;
-    --border-input: #7d8689;
+    --bg: #0e181b;
+    --surface: #152226;
+    --surface-2: #1d2e33;
+    --text: #e4eef0;
+    --text-muted: #a3b6bb;
+    --border: #2a3d42;
+    --border-input: #6f878e;
 
-    --primary: #7fb6bd;
-    --primary-soft: #23383b;
-    --on-primary: #161a1b;
-    --accent: #e08a63;
-    --accent-hover: #ea9c79;
-    --on-accent: #1a1a1a;
-    --focus: #9fd0d6;
+    --primary: #7cc8d4;
+    --primary-soft: #1a3a40;
+    --on-primary: #062a30;
+    --accent: #7cc8d4;
+    --accent-hover: #9ad6df;
+    --on-accent: #062a30;
+    --focus: #9ad6df;
 
     --danger: #f2a49c;
     --danger-soft: #3b2220;
     --success: #8fd0a6;
-    --success-soft: #1f3327;
+    --success-soft: #1b3326;
     --warning: #ebc983;
-    --warning-soft: #3b3020;
+    --warning-soft: #3a2f1c;
 
-    --kind-nota-bg: #2c3133;
-    --kind-nota-fg: #d3d6d7;
+    --kind-nota-bg: #243236;
+    --kind-nota-fg: #d3dcdf;
     --kind-sintoma-bg: #3d2524;
     --kind-sintoma-fg: #f2b8b5;
     --kind-animo-bg: #312a3f;
     --kind-animo-fg: #cdb9ec;
-    --kind-medicamento-bg: #1f3538;
-    --kind-medicamento-fg: #9fd0d6;
+    --kind-medicamento-bg: #17363c;
+    --kind-medicamento-fg: #9ad6df;
     --kind-alimentacion-bg: #3b3020;
     --kind-alimentacion-fg: #ebc983;
-    --kind-ejercicio-bg: #223526;
+    --kind-ejercicio-bg: #1f3527;
     --kind-ejercicio-fg: #a8d8b1;
     --kind-otro-bg: #352f25;
     --kind-otro-fg: #d9c6a3;
 
-    --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.35);
     color-scheme: dark;
   }
 }
@@ -129,7 +136,7 @@ body {
   color: var(--text);
   font-family: var(--font);
   font-size: var(--fs-base);
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -159,7 +166,7 @@ h1 {
 h2,
 h3 {
   font-size: var(--fs-base);
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -285,7 +292,12 @@ a {
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
-  transition: background-color 0.15s, border-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+/* Respuesta al toque: el botón "se hunde" (sin movimiento si se pidió reducirlo). */
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .btn:hover {
@@ -301,7 +313,7 @@ a {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--on-accent);
-  box-shadow: 0 2px 8px rgb(181 86 47 / 0.25);
+  box-shadow: 0 2px 8px rgb(11 106 120 / 0.22);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -385,6 +397,8 @@ textarea.input {
 .alert {
   padding: 12px 16px;
   border-radius: var(--radius-sm);
+  /* Franja lateral: el aviso se distingue aunque no se perciba el color. */
+  border-inline-start: 4px solid currentColor;
   background: var(--danger-soft);
   color: var(--danger);
   font-size: var(--fs-sm);
@@ -411,6 +425,7 @@ textarea.input {
 .slow-hint {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
+  border-inline-start: 4px solid currentColor;
   background: var(--warning-soft);
   color: var(--warning);
   font-size: var(--fs-sm);

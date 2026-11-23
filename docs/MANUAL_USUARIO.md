@@ -15,6 +15,8 @@ Funciona en el celular y en el computador.
    con quién se comparten.
 3. **Agrega a la persona que cuidas** ("Agregar persona"): nombre y, si
    quieres, fecha de nacimiento y notas importantes (por ejemplo, alergias).
+   Las notas aparecen destacadas como **Importante** arriba de todo, para que
+   toda la familia las vea antes de anotar o dar un medicamento.
 4. **Invita a tu familia** en "Red de cuidado" con su correo. Cada persona
    necesita su propia cuenta.
 
@@ -94,8 +96,8 @@ muestra en qué registros se basó (**"Basado en N registros"**), para que
 puedas comprobarlo.
 
 - Si no hay información suficiente, lo dice.
-- **No reemplaza a un profesional de salud.** Ante una urgencia, llama a un
-  servicio de emergencia.
+- **No reemplaza a un profesional de salud.** Ante una urgencia, toca
+  **Llamar al 131 (SAMU)**: el botón está siempre a la vista en el asistente.
 
 ![Asistente](manual/07-asistente.jpg)
 
