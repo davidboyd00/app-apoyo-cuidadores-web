@@ -1,0 +1,39 @@
+# Configuración de Render (Blueprint) del cliente web: sitio estático gratuito.
+# Ver: https://render.com/docs/blueprint-spec
+#
+# Las variables VITE_* se incrustan en el bundle al compilar: todo lo que va
+# acá es visible en el navegador (nunca la service role). Las de Supabase van
+# con `sync: false`: Render las pide al crear el Blueprint y no quedan en el repo.
+#
+# Después de crearlo, poner la URL de este sitio en CORS_ORIGINS del backend.
+
+services:
+  - type: web
+    name: caregivers-web
+    runtime: static
+    branch: main
+    autoDeployTrigger: commit
+
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+
+    # BrowserRouter: toda ruta desconocida sirve index.html (si no, recargar
+    # /patients/… da 404).
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    envVars:
+      # Vite 8 pide Node ^20.19 o >=22.12.
+      - key: NODE_VERSION
+        value: "22"
+      - key: VITE_API_URL
+        value: https://caregivers-backend.onrender.com
+      # Debe coincidir con POLICY_VERSION del backend o todo cae en 409.
+      - key: VITE_POLICY_VERSION
+        value: "2026-09-11"
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false

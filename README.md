@@ -62,7 +62,14 @@ npm run build        # tsc -b && vite build → dist/
 npm run preview      # opcional: probar el build en http://localhost:4173
 ```
 
-Configuración en el hosting:
+**En Render (lo que usamos):** `render.yaml` define el sitio estático
+`caregivers-web`. Se crea con
+[Deploy to Render](https://render.com/deploy?repo=https://github.com/davidboyd00/app-apoyo-cuidadores-web):
+Render pide `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` y el resto ya
+viene en el archivo (API en `https://caregivers-backend.onrender.com`).
+Después, poner la URL del sitio en `CORS_ORIGINS` del backend (abajo).
+
+Configuración en el hosting (si se usa otro):
 
 - **Build command**: `npm ci && npm run build` · **Publish directory**: `dist`.
 - **Variables `VITE_*`**: Vite las incrusta en el bundle **al compilar**,
