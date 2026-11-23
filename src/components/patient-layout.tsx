@@ -71,7 +71,12 @@ export function PatientLayout({ seccion, children }: Props) {
           <div className="stack-sm">
             <h1>{paciente.data.nombre}</h1>
             {anios !== null && <p className="muted">{anios} años</p>}
-            {paciente.data.notas && <p className={s.notas}>{paciente.data.notas}</p>}
+            {paciente.data.notas && (
+              <div className={s.notas} role="note" aria-label="Notas importantes">
+                <span className={s.notasEtiqueta}>Importante</span>
+                <p>{paciente.data.notas}</p>
+              </div>
+            )}
           </div>
         </div>
         <RelevoBadge patientId={id} />

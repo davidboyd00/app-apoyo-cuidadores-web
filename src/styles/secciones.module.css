@@ -177,3 +177,30 @@
     padding: 0;
   }
 }
+
+/* Urgencias: siempre a la vista en el asistente, con un botón de llamada
+   grande (48 px). Franja roja + texto: no depende solo del color. */
+.urgencia {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border-inline-start: 4px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.llamar.llamar {
+  background: var(--surface);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.llamar.llamar:hover {
+  background: var(--danger-soft);
+}
