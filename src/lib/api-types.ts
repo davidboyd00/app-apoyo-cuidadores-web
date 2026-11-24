@@ -2751,6 +2751,8 @@ export interface operations {
             query?: {
                 region?: string | null;
                 tipo?: string | null;
+                /** @description Busca en nombre, comuna y dirección. */
+                q?: string | null;
                 limit?: number;
             };
             header?: {

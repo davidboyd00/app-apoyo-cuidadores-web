@@ -393,16 +393,20 @@ export function useGenerarResumen(patientId: string | undefined) {
 
 // --- Centros y farmacias ----------------------------------------------------------
 
-export function useCentros(filtros: { region?: string; tipo?: string }) {
+// Son miles: región, tipo y texto (nombre, comuna o dirección) se filtran en
+// el servidor. `limite` acota lo que se muestra.
+export function useCentros(filtros: { region?: string; tipo?: string; q?: string }, limite = 100) {
   return useQuery({
-    queryKey: ["centers", filtros],
+    queryKey: ["centers", filtros, limite],
     queryFn: () => {
-      const qs = new URLSearchParams({ limit: "200" });
+      const qs = new URLSearchParams({ limit: String(limite) });
       if (filtros.region) qs.set("region", filtros.region);
       if (filtros.tipo) qs.set("tipo", filtros.tipo);
+      if (filtros.q) qs.set("q", filtros.q);
       return api.get<Schemas["Center"][]>(`/centers?${qs}`);
     },
     staleTime: 60 * 60_000,
+    placeholderData: (anterior) => anterior,
   });
 }
 
